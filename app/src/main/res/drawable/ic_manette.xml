@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manette stylisée, centrée dans la zone sûre de l'icône adaptative (108dp). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#3FBF73"
+        android:pathData="M38,40h32c8,0 13,5 15,12l4,14c1.5,5.5 -2,10 -7,10c-3,0 -5,-1.5 -6.5,-4l-3,-5h-37l-3,5c-1.5,2.5 -3.5,4 -6.5,4c-5,0 -8.5,-4.5 -7,-10l4,-14c2,-7 7,-12 15,-12z" />
+    <path
+        android:fillColor="#0F141A"
+        android:pathData="M37,49h4v5h5v4h-5v5h-4v-5h-5v-4h5z" />
+    <path
+        android:fillColor="#0F141A"
+        android:pathData="M70,50m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0M77,56m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+</vector>

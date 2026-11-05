@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Les jeux peuvent être sur le stockage interne ou sur un disque USB (/storage/XXXX-XXXX). -->
+    <root-path name="storage" path="storage" />
+    <external-path name="interne" path="." />
+</paths>
