@@ -13,9 +13,12 @@
 
 **Requirements:** unchanged, Android 8.0 (API 26) or newer.
 
+**Updating from 0.1.0:** install the new APK over it, no need to uninstall. It is signed with the same key, so your sources and settings are kept.
+
 ### Tested
 
 - Unit tests (15) and Android lint (0 errors) pass.
+- The APK has the same signing certificate as the 0.1.0 APK (checked with apksigner).
 - Checked on an Android 15 emulator (Pixel 9a profile, system in English):
   - welcome, home and *Settings* screens in English;
   - the same screens in French after switching RetroSalon's language to French;
