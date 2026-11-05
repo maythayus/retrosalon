@@ -15,8 +15,8 @@ android {
         applicationId = "fr.retrosalon"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     buildTypes {
@@ -34,6 +34,15 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    androidResources {
+        // Déclare les langues de l'app (anglais par défaut, français) : l'interface suit la langue
+        // du système, et Android 13+ permet aussi de choisir la langue de RetroSalon seule.
+        generateLocaleConfig = true
+        // Garde seulement ces langues dans l'APK, y compris pour les textes des bibliothèques :
+        // pas d'écran à moitié en allemand quand l'app, elle, retombe sur l'anglais.
+        localeFilters += setOf("en", "fr")
     }
 
     packaging {

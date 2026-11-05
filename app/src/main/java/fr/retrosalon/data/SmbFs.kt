@@ -11,6 +11,8 @@ import com.hierynomus.smbj.auth.NtlmAuthenticator
 import com.hierynomus.smbj.connection.Connection
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.DiskShare
+import fr.retrosalon.R
+import fr.retrosalon.UiException
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -116,7 +118,7 @@ class SmbFs(private val source: Source.Smb) : SourceFs {
             val all = try {
                 InetAddress.getAllByName(host).toList()
             } catch (e: UnknownHostException) {
-                throw IOException("Serveur introuvable : « $host ». Essayez son adresse IP (ex. 192.168.1.20).", e)
+                throw UiException(R.string.err_server_not_found, host, cause = e)
             }
             val ordered = all.filterIsInstance<Inet6Address>() + all.filterIsInstance<Inet4Address>()
             val tried = mutableListOf<String>()
@@ -128,7 +130,7 @@ class SmbFs(private val source: Source.Smb) : SourceFs {
                     tried += if (address is Inet6Address) "IPv6 ${address.hostAddress}" else "IPv4 ${address.hostAddress}"
                 }
             }
-            throw IOException("Serveur injoignable sur le port $port (essayé : ${tried.joinToString(", ")}).")
+            throw UiException(R.string.err_server_unreachable, port, tried.joinToString(", "))
         }
     }
 

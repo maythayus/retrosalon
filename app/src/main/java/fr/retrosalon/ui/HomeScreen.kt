@@ -31,12 +31,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import fr.retrosalon.AppModel
+import fr.retrosalon.R
+import fr.retrosalon.formatBytes
 import fr.retrosalon.rememberGamepads
 import fr.retrosalon.data.Game
 import fr.retrosalon.data.Source
@@ -74,24 +79,31 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text("RetroSalon", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Palette.accent)
-            Muted("${games.size} jeux · ${model.sources.size} source(s)")
+            Muted(
+                pluralStringResource(R.plurals.home_games_count, games.size, games.size) + " · " +
+                    pluralStringResource(R.plurals.home_sources_count, model.sources.size, model.sources.size),
+            )
             val pads = rememberGamepads()
             if (pads.isEmpty()) {
-                Badge("Aucune manette · appairez la Xbox Nano", Palette.warn)
+                Badge(stringResource(R.string.home_no_controller), Palette.warn)
             } else {
-                Badge("Manette : ${pads.first()}", Palette.accent)
+                Badge(stringResource(R.string.home_controller, pads.first()), Palette.accent)
             }
             Spacer(Modifier.height(6.dp))
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    SystemRow("Tous les jeux", games.size, selected == null, Modifier.focusRequester(firstFocus)) { selected = null }
+                    SystemRow(stringResource(R.string.home_all_games), games.size, selected == null, Modifier.focusRequester(firstFocus)) { selected = null }
                 }
                 items(systems, key = { it.id }) { s ->
                     SystemRow(s.name, counts[s.id] ?: 0, selected == s.id) { selected = s.id }
                 }
             }
-            ActionButton(if (model.scanning) "Analyse en cours…" else "Actualiser", onClick = { model.rescan() }, modifier = Modifier.fillMaxWidth())
-            ActionButton("Réglages", onClick = onSettings, modifier = Modifier.fillMaxWidth())
+            ActionButton(
+                stringResource(if (model.scanning) R.string.home_scanning else R.string.home_refresh),
+                onClick = { model.rescan() },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            ActionButton(stringResource(R.string.home_settings), onClick = onSettings, modifier = Modifier.fillMaxWidth())
         }
 
         // Liste des jeux
@@ -104,17 +116,17 @@ fun HomeScreen(
         ) {
             if (!storageOk) {
                 Panel(Modifier.fillMaxWidth()) {
-                    Text("RetroSalon a besoin de l'accès aux fichiers", style = MaterialTheme.typography.titleMedium, color = Palette.warn)
-                    Muted("Sans lui, l'app ne peut ni lire les jeux de la TV et des disques USB, ni copier les jeux du serveur.")
-                    ActionButton("Autoriser l'accès", onClick = onRequestStorage, primary = true)
+                    Text(stringResource(R.string.home_storage_title), style = MaterialTheme.typography.titleMedium, color = Palette.warn)
+                    Muted(stringResource(R.string.home_storage_body))
+                    ActionButton(stringResource(R.string.home_allow_access), onClick = onRequestStorage, primary = true)
                 }
             }
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    selected?.let { Systems.byId(it)?.name } ?: "Tous les jeux",
+                    selected?.let { Systems.byId(it)?.name } ?: stringResource(R.string.home_all_games),
                     style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Palette.text,
                 )
-                Muted("${shown.size} jeux")
+                Muted(pluralStringResource(R.plurals.home_games_count, shown.size, shown.size))
             }
             model.scanReport?.let { Muted(it) }
 
@@ -122,9 +134,9 @@ fun HomeScreen(
                 EmptyState(onAddLocal, onAddSmb)
             } else if (games.isEmpty() && !model.scanning) {
                 Panel(Modifier.fillMaxWidth()) {
-                    Text("Aucun jeu trouvé", style = MaterialTheme.typography.titleMedium)
-                    Muted("Rangez les jeux dans un dossier par console à la racine de la source : snes, megadrive, psx, ps2, gc, n64, gba, dreamcast, psp…")
-                    ActionButton("Réglages des sources", onClick = onSettings)
+                    Text(stringResource(R.string.home_no_games), style = MaterialTheme.typography.titleMedium)
+                    Muted(stringResource(R.string.home_no_games_hint))
+                    ActionButton(stringResource(R.string.home_source_settings), onClick = onSettings)
                 }
             } else {
                 LazyVerticalGrid(
@@ -172,8 +184,11 @@ private fun GameCard(game: Game, network: Boolean, showSystem: Boolean, onPlay: 
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (showSystem) Text(Systems.byId(game.systemId)?.name ?: game.systemId, style = MaterialTheme.typography.labelSmall)
-                Text(if (network) "Serveur" else "Local", style = MaterialTheme.typography.labelSmall)
-                Text(AppModel.formatBytes(game.size), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    stringResource(if (network) R.string.home_badge_server else R.string.home_badge_local),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                Text(formatBytes(LocalContext.current, game.size), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -183,14 +198,11 @@ private fun GameCard(game: Game, network: Boolean, showSystem: Boolean, onPlay: 
 private fun EmptyState(onAddLocal: () -> Unit, onAddSmb: () -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
         Panel(Modifier.fillMaxWidth(0.8f)) {
-            Text("Ajoutez vos jeux", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Muted(
-                "Deux types de sources. Un dossier de la TV ou d'un disque USB : les jeux sont lancés sur place. " +
-                    "Un serveur de la maison (NAS ou PC, partage SMB) : le jeu est copié sur la TV au lancement, puis gardé en cache.",
-            )
+            Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Muted(stringResource(R.string.home_empty_body))
             ButtonRow {
-                ActionButton("Dossier de la TV ou USB", onClick = onAddLocal, primary = true)
-                ActionButton("Serveur réseau (SMB)", onClick = onAddSmb)
+                ActionButton(stringResource(R.string.home_add_local), onClick = onAddLocal, primary = true)
+                ActionButton(stringResource(R.string.home_add_smb), onClick = onAddSmb)
             }
         }
     }

@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import fr.retrosalon.R
 
 /**
  * Premier lancement : explique l'autorisation demandée, puis ouvre la demande du système.
@@ -30,25 +32,20 @@ fun WelcomeScreen(systemDialog: Boolean, onAllow: () -> Unit, onLater: () -> Uni
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         Panel(Modifier.widthIn(max = 720.dp).fillMaxWidth()) {
-            Text("Bienvenue dans RetroSalon", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Palette.accent)
-            Muted("Une seule app pour lancer les jeux de toutes vos consoles, à la manette Xbox Nano ou à la télécommande.")
+            Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Palette.accent)
+            Muted(stringResource(R.string.welcome_intro))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Une autorisation est nécessaire", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.welcome_permission_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Muted(stringResource(R.string.welcome_permission_body))
                 Muted(
-                    "Accès aux fichiers : pour lire vos jeux sur la TV ou un disque USB, et copier ceux du serveur " +
-                        "dans le cache. RetroSalon ne parcourt que les dossiers que vous ajoutez comme source.",
-                )
-                Muted(
-                    if (systemDialog) {
-                        "Android va vous demander de confirmer : choisissez « Autoriser »."
-                    } else {
-                        "Sur l'écran suivant, activez RetroSalon, puis revenez avec la touche Retour."
-                    },
+                    stringResource(
+                        if (systemDialog) R.string.welcome_hint_system_dialog else R.string.welcome_hint_settings_screen,
+                    ),
                 )
             }
             ButtonRow {
-                ActionButton("Autoriser l'accès", onClick = onAllow, modifier = Modifier.focusRequester(focus), primary = true)
-                ActionButton("Plus tard", onClick = onLater)
+                ActionButton(stringResource(R.string.welcome_allow_access), onClick = onAllow, modifier = Modifier.focusRequester(focus), primary = true)
+                ActionButton(stringResource(R.string.welcome_later), onClick = onLater)
             }
         }
     }

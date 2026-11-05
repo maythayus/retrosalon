@@ -11,12 +11,14 @@ RetroSalon puts all your retro games in a single library on the TV, from the NES
 
 | | |
 |---|---|
-| Version | 0.1.0 |
+| Version | 0.2.0 |
 | Minimum Android | **Android 8.0 (API 26)** |
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV (also works on phones and tablets in landscape) |
-| Interface language | French |
+| Interface language | English and French, following the system language |
 | Licence | [MIT](LICENSE) |
+
+**Language.** RetroSalon follows the TV's language: French when the system is set to French, English for any other language. On Android 13 and newer, you can also give RetroSalon its own language, where the system settings offer it: *Apps → RetroSalon → Language*. Console and emulator names stay as they are. The screen names below are the English ones.
 
 ---
 
@@ -30,7 +32,7 @@ The Xbox Nano (Bluetooth, USB-C) connects to Android like any Xbox Wireless Cont
 2. Turn the controller on with the Xbox button, then hold the **pair** button until the logo blinks fast.
 3. Pick **Xbox Wireless Controller** in the list.
 
-RetroSalon shows the controller's name in the sidebar (*Manette : Xbox Wireless Controller*). If no controller is connected, it shows a reminder to pair the Xbox Nano. The *Réglages* screen repeats these steps.
+RetroSalon shows the controller's name in the sidebar (*Controller: Xbox Wireless Controller*). If no controller is connected, it shows a reminder to pair the Xbox Nano. RetroSalon's *Settings* screen repeats these steps.
 
 **Keeping the controller up to date.** Firmware updates can fix Bluetooth problems such as lag or disconnections. The usual way is the *Xbox Accessories* app on Windows, or an Xbox console. Some sources say the **Xbox app on Android** can also update it. This isn't the main official route, and it can be slower:
 
@@ -93,7 +95,7 @@ Put your games in **one folder per console**. RetroSalon recognizes the folder n
 | Arcade | `arcade` | `mame`, `fbneo`, `fba`, `cps1`, `cps2`, `cps3` | RetroArch (FinalBurn Neo), MAME4droid |
 | Atari 2600 | `atari2600` | `2600` | RetroArch (Stella) |
 
-By default RetroSalon uses the first installed emulator in each list. You can choose another one per console in **Réglages → Émulateurs**.
+By default RetroSalon uses the first installed emulator in each list. You can choose another one per console in **Settings → Choose emulators**.
 
 ### Minimum Android version
 
@@ -111,7 +113,7 @@ RetroSalon itself needs **Android 8.0**. A console therefore needs whichever is 
 | DuckStation | not verified | Historically Android 7+, arm64. |
 | M64Plus FZ, DraStic, ePSXe, Flycast, Redream, Yaba Sanshiro 2, ARMSX2, MAME4droid | not verified | No reliable figure found. |
 
-When an emulator needs a newer Android than the TV has, *Réglages → Émulateurs* shows **"Demande Android X"** on it.
+When an emulator needs a newer Android than the TV has, *Settings → Choose emulators* shows **"Requires Android X"** on it.
 
 ---
 
@@ -142,19 +144,19 @@ A console folder itself can also be added as a source (for example `Roms/psx`).
 
 ### 2. A home server (NAS, PC, Samba): hybrid storage
 
-Add an **SMB share** (Synology, QNAP, a shared folder on a Windows PC, Samba…) with its address, share name, optional sub-folder and an optional user name and password. Leave the user name empty for guest access. The **Tester la connexion** button checks the connection and lists the consoles it finds.
+Add an **SMB share** (Synology, QNAP, a shared folder on a Windows PC, Samba…) with its address, share name, optional sub-folder and an optional user name and password. Leave the user name empty for guest access. The **Test connection** button checks the connection and lists the consoles it finds.
 
 When you start a network game:
 
-1. RetroSalon copies it to the TV, with a progress bar. *Annuler* stops the copy.
+1. RetroSalon copies it to the TV, with a progress bar. *Cancel* stops the copy.
 2. The game is kept in the **cache** (`/storage/emulated/0/RetroSalon/jeux/<console>/` by default), so the next launch is instant.
 3. When the cache goes over its limit (32 GB by default, adjustable from 2 GB to 2,000 GB), the games you played least recently are deleted from the TV. They stay on the server.
 
-You can move the cache to a USB drive, change the limit, or empty it in *Réglages*. Moving the cache only changes where new games are copied; empty it first to free the old location. Emulator save files are kept by the emulators, never in the cache.
+You can move the cache to a USB drive, change the limit, or empty it in RetroSalon's *Settings*. Moving the cache only changes where new games are copied; empty it first to free the old location. Emulator save files are kept by the emulators, never in the cache.
 
 File names sent by the server that would point outside the console's cache folder (an absolute path, or `..`) are refused.
 
-**IPv6 first, IPv4 fallback.** RetroSalon tries every address of the server, IPv6 first, waiting up to 3 seconds for each. If no IPv6 address answers, it uses IPv4. You can type a name (`nas.local`), an IPv4 address (`192.168.1.20`), an IPv6 address (`fd00::20` or `[fd00::20]:445`), or an `smb://nas.local` or `\\NAS` address. If you paste a full address such as `smb://nas.local/games`, only the server part is used; put the share name in the *Partage* field.
+**IPv6 first, IPv4 fallback.** RetroSalon tries every address of the server, IPv6 first, waiting up to 3 seconds for each. If no IPv6 address answers, it uses IPv4. You can type a name (`nas.local`), an IPv4 address (`192.168.1.20`), an IPv6 address (`fd00::20` or `[fd00::20]:445`), or an `smb://nas.local` or `\\NAS` address. If you paste a full address such as `smb://nas.local/games`, only the server part is used; put the share name in the *Share* field.
 
 ### What RetroSalon understands in your folders
 
@@ -172,7 +174,7 @@ On first launch, RetroSalon shows a welcome screen that explains what it needs, 
 - **Android 11 and newer:** the system screen *All files access* opens. Turn RetroSalon on, then press Back.
 - **Android 8 to 10:** Android shows its usual *Allow* dialog.
 
-Without this access, RetroSalon can't read games on the TV or a USB drive, or write the cache. *Plus tard* skips the step; a reminder then stays on the home screen and in *Réglages*.
+Without this access, RetroSalon can't read games on the TV or a USB drive, or write the cache. *Later* skips the step; a reminder then stays on the home screen and in *Settings*.
 
 Some Android TV models don't have the *All files access* screen. In that case, grant it from a computer with `adb` (USB or network debugging enabled on the TV):
 
@@ -184,7 +186,7 @@ adb shell appops set --uid fr.retrosalon MANAGE_EXTERNAL_STORAGE allow
 
 ## Setting up the emulators
 
-RetroSalon passes the game to each emulator the way that emulator expects. The *Réglages → Émulateurs* screen shows what is left to do for each console.
+RetroSalon passes the game to each emulator the way that emulator expects. The *Settings → Choose emulators* screen shows what is left to do for each console.
 
 | How the game is passed | Emulators | What you need to do |
 |---|---|---|
@@ -198,9 +200,9 @@ RetroSalon passes the game to each emulator the way that emulator expects. The *
 
 ## Installing
 
-1. Download `RetroSalon-0.1.0.apk` from the release.
+1. Download `RetroSalon-0.2.0.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
 2. Install it on the TV. Choose one:
-   - over the network with `adb install RetroSalon-0.1.0.apk`;
+   - over the network with `adb install RetroSalon-0.2.0.apk`;
    - with an app such as *Downloader*;
    - from a USB stick with a file manager.
 

@@ -1,5 +1,28 @@
 # Release notes
 
+## RetroSalon 0.2.0 (2026-11-05)
+
+**The interface now speaks English and French.**
+
+- RetroSalon follows the system language: French when the TV is set to French, English for any other language.
+- On Android 13 and newer, RetroSalon can have its own language, where the system settings offer it (*Apps → RetroSalon → Language*). Android lists only English and French there.
+- Everything the app shows is translated: screens, buttons, error messages, the launch overlay and counts ("1 game", "2 games"). File sizes use the system's units.
+- Only English and French are kept in the APK, including the texts of the bundled libraries, so a screen is never half in another language.
+- Console and emulator names are not translated.
+- The README now uses the English screen names: *Settings*, *Settings → Choose emulators*, *Test connection*.
+
+**Requirements:** unchanged, Android 8.0 (API 26) or newer.
+
+### Tested
+
+- Unit tests (15) and Android lint (0 errors) pass.
+- Checked on an Android 15 emulator (Pixel 9a profile, system in English):
+  - welcome, home and *Settings* screens in English;
+  - the same screens in French after switching RetroSalon's language to French;
+  - back to *System default*, the app returns to English;
+  - Android's app language screen offers *System default*, English and Français.
+- Not checked yet: a TV whose whole system is set to French, and the French texts on a real Android TV.
+
 ## RetroSalon 0.1.0 (2026-11-05)
 
 First release: one launcher for every console on Android TV, designed for the Microsoft Xbox Nano controller.
@@ -50,7 +73,7 @@ For each console, the screen shows:
 - **Folder access in the emulators.** Most standalone emulators (PPSSPP, Dolphin, DuckStation…) must be given access to each console folder once, in their own settings. Until then, Android blocks them from opening the game.
 - **SMB authentication.** Only NTLM user/password or guest access is supported. Kerberos isn't.
 - **Saved password.** The SMB password is stored in the app's private storage on the TV. It isn't encrypted, but it is left out of Android backups, so it stays on the TV.
-- **Language.** The interface is in French only.
+- **Language.** The interface is in French only. *(English added in 0.2.0.)*
 - **No artwork.** There is no box art or game metadata yet.
 
 ### Tested

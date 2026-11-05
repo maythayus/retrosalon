@@ -1,6 +1,8 @@
 package fr.retrosalon
 
 import android.app.Application
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -56,6 +58,17 @@ class AppModel(app: Application) : AndroidViewModel(app) {
 
     private var launchJob: Job? = null
 
+    /** Texte traduit dans la langue du système. */
+    private fun str(@StringRes id: Int, vararg args: Any): String =
+        getApplication<Application>().getString(id, *args)
+
+    private fun plural(@PluralsRes id: Int, count: Int, vararg args: Any): String =
+        getApplication<Application>().resources.getQuantityString(id, count, *args)
+
+    /** Assemble une liste avec une ressource à deux paramètres (« %1$s ou %2$s »…). */
+    private fun List<String>.joinWith(@StringRes id: Int): String =
+        reduceOrNull { acc, s -> str(id, acc, s) }.orEmpty()
+
     fun refreshInstalled() {
         installTick++
         refreshCacheUsage()
@@ -71,7 +84,8 @@ class AppModel(app: Application) : AndroidViewModel(app) {
     fun rescan() {
         if (scanning) return
         scanning = true
-        scanReport = "Analyse des sources…"
+        scanReport = str(R.string.model_scan_running)
+        val app = getApplication<Application>()
         viewModelScope.launch(Dispatchers.IO) {
             val found = mutableListOf<Game>()
             val problems = mutableListOf<String>()
@@ -84,7 +98,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                     }
                     fs.use { found += Scanner.scan(it, source.id, rootName) }
                 } catch (e: Exception) {
-                    problems += "${source.label} : ${e.message ?: e.javaClass.simpleName}"
+                    problems += str(R.string.model_scan_problem_item, source.label, e.userMessage(app))
                     unreachable += source.id
                 }
             }
@@ -97,7 +111,8 @@ class AppModel(app: Application) : AndroidViewModel(app) {
             withContext(Dispatchers.Main) {
                 games = merged
                 scanning = false
-                scanReport = if (problems.isEmpty()) null else "Problème : " + problems.joinToString(" ; ")
+                scanReport = if (problems.isEmpty()) null
+                else str(R.string.model_scan_problems, problems.joinWith(R.string.model_scan_problem_join))
             }
         }
     }
@@ -108,18 +123,19 @@ class AppModel(app: Application) : AndroidViewModel(app) {
         val system = Systems.byId(game.systemId) ?: return
         val source = sources.firstOrNull { it.id == game.sourceId }
         if (source == null) {
-            launch = LaunchState(game.title, "", error = "La source de ce jeu a été supprimée. Lancez « Actualiser ».")
+            launch = LaunchState(game.title, "", error = str(R.string.model_launch_source_removed))
             return
         }
         val launcher = Launch.pick(app, store, system)
         if (launcher == null) {
-            val names = system.launchers.map { it.label.substringBefore(" ·") }.distinct().joinToString(" ou ")
-            launch = LaunchState(game.title, "", error = "Aucun émulateur ${system.name} n'est installé. Installez $names.")
+            val names = system.launchers.map { it.label.substringBefore(" ·") }.distinct().joinWith(R.string.model_launch_or)
+            launch = LaunchState(game.title, "", error = str(R.string.model_launch_no_emulator, system.name, names))
             return
         }
         launch = LaunchState(
             game.title,
-            if (source is Source.Smb && !cache.isCached(source, game)) "Copie depuis ${source.label}…" else "Lancement avec ${launcher.label}…",
+            if (source is Source.Smb && !cache.isCached(source, game)) str(R.string.model_launch_copying_from, source.label)
+            else str(R.string.model_launch_starting, launcher.label),
             progress = null,
         )
         launchJob = viewModelScope.launch {
@@ -129,12 +145,15 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                         if (total > 0) {
                             val p = (done.toDouble() / total).toFloat().coerceIn(0f, 1f)
                             viewModelScope.launch(Dispatchers.Main) {
-                                launch = launch?.copy(progress = p, step = "Copie : ${formatBytes(done)} / ${formatBytes(total)}")
+                                launch = launch?.copy(
+                                    progress = p,
+                                    step = str(R.string.model_launch_copy_progress, formatBytes(app, done), formatBytes(app, total)),
+                                )
                             }
                         }
                     }
                 }
-                launch = launch?.copy(step = "Lancement avec ${launcher.label}…", progress = 1f)
+                launch = launch?.copy(step = str(R.string.model_launch_starting, launcher.label), progress = 1f)
                 val error = Launch.start(app, launcher, prepared)
                 launch = if (error != null) launch?.copy(error = error) else null
                 refreshCacheUsage()
@@ -142,7 +161,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                 launch = null
                 throw e
             } catch (e: Exception) {
-                launch = launch?.copy(error = "Impossible de préparer le jeu : ${e.message ?: e.javaClass.simpleName}")
+                launch = launch?.copy(error = str(R.string.model_launch_prepare_failed, e.userMessage(app)))
             }
         }
     }
@@ -165,20 +184,20 @@ class AppModel(app: Application) : AndroidViewModel(app) {
         store.saveLibrary(games)
     }
 
-    /** Teste la connexion SMB et renvoie un compte rendu lisible. */
-    suspend fun testSmb(source: Source.Smb): String = withContext(Dispatchers.IO) {
+    /** Teste la connexion SMB : réussite ou échec, et un compte rendu lisible. */
+    suspend fun testSmb(source: Source.Smb): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         try {
             SmbFs(source).use { fs ->
                 val entries = fs.list("")
                 val systems = entries.filter { it.isDir }.mapNotNull { Systems.byFolder(it.name)?.name }
-                if (systems.isEmpty()) {
-                    "Connexion réussie. ${entries.size} éléments, mais aucun dossier de console reconnu (ex. snes, psx, gc)."
+                true to if (systems.isEmpty()) {
+                    plural(R.plurals.model_smb_ok_no_console, entries.size, entries.size)
                 } else {
-                    "Connexion réussie. Consoles trouvées : ${systems.joinToString(", ")}."
+                    str(R.string.model_smb_ok_consoles, systems.joinToString(", "))
                 }
             }
         } catch (e: Exception) {
-            "Échec : ${e.message ?: e.javaClass.simpleName}"
+            false to str(R.string.model_smb_failed, e.userMessage(getApplication<Application>()))
         }
     }
 
@@ -206,15 +225,6 @@ class AppModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             cache.clear()
             refreshCacheUsage()
-        }
-    }
-
-    companion object {
-        fun formatBytes(b: Long): String = when {
-            b >= 1_000_000_000L -> "%.1f Go".format(b / 1e9)
-            b >= 1_000_000L -> "%.0f Mo".format(b / 1e6)
-            b >= 1_000L -> "%.0f Ko".format(b / 1e3)
-            else -> "$b o"
         }
     }
 }

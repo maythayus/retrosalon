@@ -1,9 +1,10 @@
 package fr.retrosalon.data
 
+import fr.retrosalon.R
+import fr.retrosalon.UiException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import java.io.File
-import java.io.IOException
 
 /** Fichier prêt à être lancé, et le dossier de sa console (utile pour les URI SAF et MAME). */
 data class Prepared(val file: File, val systemDir: File)
@@ -18,7 +19,7 @@ internal fun childInside(base: File, rel: String): File {
     val file = File(base, clean)
     val escapes = clean.isBlank() || clean.startsWith("/") || clean.split('/').any { it == ".." } ||
         !file.canonicalPath.startsWith(base.canonicalPath + File.separator)
-    if (escapes) throw IOException("Nom de fichier refusé, il sort du dossier du jeu : $rel")
+    if (escapes) throw UiException(R.string.err_file_name_refused, rel)
     return file
 }
 
@@ -46,7 +47,7 @@ class GameCache(private val store: Store) {
         val systemDir = systemDirFor(source, game)
         if (source is Source.Local) {
             val file = File(systemDir, game.rel)
-            if (!file.exists()) throw IOException("Fichier introuvable : ${file.path}. Lancez « Actualiser ».")
+            if (!file.exists()) throw UiException(R.string.err_file_not_found, file.path)
             return Prepared(file, systemDir)
         }
         source as Source.Smb
@@ -125,7 +126,7 @@ class GameCache(private val store: Store) {
                 }
             }
             if (dest.exists()) dest.delete()
-            if (!part.renameTo(dest)) throw IOException("Impossible d'écrire ${dest.path}")
+            if (!part.renameTo(dest)) throw UiException(R.string.err_cannot_write, dest.path)
         } catch (e: Throwable) {
             part.delete()
             throw e

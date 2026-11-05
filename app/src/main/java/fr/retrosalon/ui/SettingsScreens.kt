@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,7 +37,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import fr.retrosalon.AppModel
 import fr.retrosalon.Gamepads
+import fr.retrosalon.R
 import fr.retrosalon.StorageAccess
+import fr.retrosalon.formatBytes
 import fr.retrosalon.rememberGamepads
 import fr.retrosalon.data.Launch
 import fr.retrosalon.data.Source
@@ -54,6 +58,7 @@ private fun Screen(
 ) {
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val backLabel = stringResource(R.string.settings_back)
     LazyColumn(
         Modifier.fillMaxSize(),
         state = listState,
@@ -62,7 +67,7 @@ private fun Screen(
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                ActionButton("← Retour", onClick = onBack, modifier = Modifier.focusRequester(focus))
+                ActionButton(backLabel, onClick = onBack, modifier = Modifier.focusRequester(focus))
                 Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             }
         }
@@ -84,74 +89,86 @@ fun SettingsScreen(
     val volumes = remember { Volumes.list(context) }
     LaunchedEffect(Unit) { model.refreshCacheUsage() }
 
-    Screen("Réglages", onBack) {
+    Screen(stringResource(R.string.settings_title), onBack) {
         item {
             val pads = rememberGamepads()
             Panel(Modifier.fillMaxWidth()) {
-                SectionTitle("Manette Xbox Nano")
+                SectionTitle(stringResource(R.string.settings_controller_title))
                 if (pads.isEmpty()) {
-                    Badge("Aucune manette connectée", Palette.warn)
+                    Badge(stringResource(R.string.settings_controller_none), Palette.warn)
                 } else {
-                    pads.forEach { Badge(if (Gamepads.isXbox(it)) "Connectée : $it" else "Manette : $it", Palette.accent) }
+                    pads.forEach {
+                        Badge(
+                            if (Gamepads.isXbox(it)) {
+                                stringResource(R.string.settings_controller_connected, it)
+                            } else {
+                                stringResource(R.string.settings_controller_other, it)
+                            },
+                            Palette.accent,
+                        )
+                    }
                 }
-                Muted("1. Sur la TV : Paramètres → Télécommandes et accessoires → Associer un accessoire.")
-                Muted("2. Allumez la manette (bouton Xbox), puis maintenez le bouton d'appairage jusqu'à ce que le logo clignote vite.")
-                Muted("3. Choisissez « Xbox Wireless Controller ». RetroArch, PPSSPP, Dolphin et la plupart des émulateurs l'assignent seuls.")
+                Muted(stringResource(R.string.settings_controller_step1))
+                Muted(stringResource(R.string.settings_controller_step2))
+                Muted(stringResource(R.string.settings_controller_step3))
             }
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                SectionTitle("Accès aux fichiers")
+                SectionTitle(stringResource(R.string.settings_storage_title))
                 if (storageOk) {
-                    Badge("Autorisé", Palette.accent)
+                    Badge(stringResource(R.string.settings_storage_allowed), Palette.accent)
                 } else {
-                    Badge("Non autorisé", Palette.warn)
-                    Muted("Si le bouton n'ouvre rien, votre TV n'a pas cet écran de réglage. Depuis un PC relié à la TV par adb, lancez :")
+                    Badge(stringResource(R.string.settings_storage_denied), Palette.warn)
+                    Muted(stringResource(R.string.settings_storage_adb_help))
                     Mono(StorageAccess.adbCommand(context), Palette.warn)
-                    ActionButton("Autoriser l'accès", onClick = onRequestStorage, primary = true)
+                    ActionButton(stringResource(R.string.settings_storage_allow), onClick = onRequestStorage, primary = true)
                 }
             }
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                SectionTitle("Sources de jeux")
-                if (model.sources.isEmpty()) Muted("Aucune source pour l'instant.")
+                SectionTitle(stringResource(R.string.settings_sources_title))
+                if (model.sources.isEmpty()) Muted(stringResource(R.string.settings_sources_empty))
                 model.sources.forEach { s ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(Modifier.weight(1f)) {
                             Text(s.label, style = MaterialTheme.typography.titleMedium)
                             Muted(
                                 when (s) {
-                                    is Source.Local -> "Dossier local · ${s.path}"
-                                    is Source.Smb -> "Serveur SMB · \\\\${s.host}\\${s.share}${if (s.path.isNotBlank()) "\\" + s.path else ""}"
+                                    is Source.Local -> stringResource(R.string.settings_source_local, s.path)
+                                    is Source.Smb -> stringResource(
+                                        R.string.settings_source_smb,
+                                        "\\\\${s.host}\\${s.share}${if (s.path.isNotBlank()) "\\" + s.path else ""}",
+                                    )
                                 },
                             )
                         }
-                        ActionButton("Supprimer", onClick = { model.removeSource(s.id) })
+                        ActionButton(stringResource(R.string.settings_source_remove), onClick = { model.removeSource(s.id) })
                     }
                 }
                 ButtonRow {
-                    ActionButton("Ajouter un dossier (TV ou USB)", onClick = onAddLocal)
-                    ActionButton("Ajouter un serveur (SMB)", onClick = onAddSmb)
+                    ActionButton(stringResource(R.string.settings_add_local), onClick = onAddLocal)
+                    ActionButton(stringResource(R.string.settings_add_smb), onClick = onAddSmb)
                 }
             }
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                SectionTitle("Cache des jeux du serveur")
-                Muted("Les jeux du serveur sont copiés ici avant d'être lancés. Les plus anciens sont effacés quand la limite est atteinte. Vos sauvegardes restent dans les émulateurs.")
+                SectionTitle(stringResource(R.string.settings_cache_title))
+                Muted(stringResource(R.string.settings_cache_help))
                 Mono(model.cacheRoot)
                 Text(
-                    "Utilisé : ${AppModel.formatBytes(model.cacheUsed)} sur ${model.cacheLimitGb} Go",
+                    stringResource(R.string.settings_cache_used, formatBytes(context, model.cacheUsed), model.cacheLimitGb),
                     style = MaterialTheme.typography.titleSmall,
                 )
                 ButtonRow {
-                    ActionButton("− 8 Go", onClick = { model.changeCacheLimit(-8) })
-                    ActionButton("+ 8 Go", onClick = { model.changeCacheLimit(8) })
-                    ActionButton("Vider le cache", onClick = { model.clearCache() })
+                    ActionButton(stringResource(R.string.settings_cache_less), onClick = { model.changeCacheLimit(-8) })
+                    ActionButton(stringResource(R.string.settings_cache_more), onClick = { model.changeCacheLimit(8) })
+                    ActionButton(stringResource(R.string.settings_cache_clear), onClick = { model.clearCache() })
                 }
                 if (volumes.size > 1) {
-                    Muted("Placer le cache sur :")
+                    Muted(stringResource(R.string.settings_cache_location))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(volumes) { v ->
                             val target = File(v.path, "RetroSalon/jeux").absolutePath
@@ -165,9 +182,9 @@ fun SettingsScreen(
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                SectionTitle("Émulateurs")
-                Muted("Choisissez l'émulateur utilisé pour chaque console et voyez ce qu'il reste à configurer.")
-                ActionButton("Choisir les émulateurs", onClick = onEmulators)
+                SectionTitle(stringResource(R.string.settings_emulators_title))
+                Muted(stringResource(R.string.settings_emulators_help))
+                ActionButton(stringResource(R.string.settings_emulators_choose), onClick = onEmulators)
             }
         }
     }
@@ -192,19 +209,17 @@ fun EmulatorsScreen(model: AppModel, onBack: () -> Unit) {
     val tick = model.installTick
     val systems = remember(counts) { Systems.all.sortedByDescending { counts[it.id] ?: 0 } }
 
-    Screen("Émulateurs par console", onBack) {
+    Screen(stringResource(R.string.emulators_title), onBack) {
         item {
-            Muted(
-                "Les émulateurs marqués « dossier à autoriser » doivent avoir accès au dossier de la console : " +
-                    "dans leurs réglages, ajoutez le dossier indiqué (cache du serveur) et, pour vos jeux locaux, le dossier de la console sur la TV ou le disque USB.",
-            )
+            Muted(stringResource(R.string.emulators_help))
         }
         items(systems, key = { it.id }) { system ->
             val chosen = remember(tick) { Launch.pick(context, model.store, system) }
             Panel(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(system.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Muted("${counts[system.id] ?: 0} jeux")
+                    val count = counts[system.id] ?: 0
+                    Muted(pluralStringResource(R.plurals.emulators_game_count, count, count))
                 }
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(system.launchers, key = { it.id }) { l ->
@@ -213,10 +228,10 @@ fun EmulatorsScreen(model: AppModel, onBack: () -> Unit) {
                             Text(l.label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                             Text(
                                 when {
-                                    Build.VERSION.SDK_INT < l.minSdk -> "Demande ${androidName(l.minSdk)}"
-                                    !installed -> "Pas installé"
-                                    chosen?.id == l.id -> "Utilisé"
-                                    else -> "Installé"
+                                    Build.VERSION.SDK_INT < l.minSdk -> stringResource(R.string.emulators_status_requires, androidName(l.minSdk))
+                                    !installed -> stringResource(R.string.emulators_status_not_installed)
+                                    chosen?.id == l.id -> stringResource(R.string.emulators_status_in_use)
+                                    else -> stringResource(R.string.emulators_status_installed)
                                 },
                                 style = MaterialTheme.typography.labelMedium,
                             )
@@ -226,15 +241,15 @@ fun EmulatorsScreen(model: AppModel, onBack: () -> Unit) {
                 chosen?.let { l ->
                     when (l.uriMode) {
                         UriMode.SAF -> {
-                            Badge("Dossier à autoriser dans ${l.label}", Palette.warn)
+                            Badge(stringResource(R.string.emulators_saf_folder, l.label), Palette.warn)
                             Mono(File(model.cacheRoot, system.id).absolutePath)
                         }
                         UriMode.PATH -> if (l.id.startsWith("ra:")) {
-                            Muted("Dans RetroArch : Menu principal → Mise à jour en ligne → Télécharger des cœurs → « ${l.label.substringAfter("· ")} ».")
+                            Muted(stringResource(R.string.emulators_retroarch_core, l.label.substringAfter("· ")))
                         }
-                        UriMode.PROVIDER -> Muted("Accès accordé automatiquement au lancement.")
+                        UriMode.PROVIDER -> Muted(stringResource(R.string.emulators_provider_auto))
                     }
-                } ?: Badge("Aucun émulateur installé pour cette console", Palette.bad)
+                } ?: Badge(stringResource(R.string.emulators_none_installed), Palette.bad)
             }
         }
     }
@@ -243,6 +258,7 @@ fun EmulatorsScreen(model: AppModel, onBack: () -> Unit) {
 @Composable
 fun AddLocalScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
+    val defaultLocalLabel = stringResource(R.string.addlocal_default_label)
     val volumes = remember { Volumes.list(context) }
     var path by rememberSaveable { mutableStateOf<String?>(null) }
     val dirs = remember(path) {
@@ -260,9 +276,9 @@ fun AddLocalScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
         }
     }
 
-    Screen("Ajouter un dossier", onBack, listState) {
+    Screen(stringResource(R.string.addlocal_title), onBack, listState) {
         if (path == null) {
-            item { Muted("Choisissez le stockage où se trouvent vos jeux.") }
+            item { Muted(stringResource(R.string.addlocal_pick_storage)) }
             items(volumes) { v ->
                 Tile(onClick = { path = v.path }, modifier = Modifier.fillMaxWidth()) {
                     Text(v.label, style = MaterialTheme.typography.titleMedium)
@@ -275,19 +291,24 @@ fun AddLocalScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
                 Panel(Modifier.fillMaxWidth()) {
                     Mono(current)
                     if (recognized.isNotEmpty()) {
-                        Badge("Consoles reconnues : ${recognized.joinToString(", ")}", Palette.accent)
+                        Badge(stringResource(R.string.addlocal_recognized, recognized.joinToString(", ")), Palette.accent)
                     } else if (Systems.byFolder(File(current).name) != null) {
-                        Badge("Dossier de console : ${Systems.byFolder(File(current).name)!!.name}", Palette.accent)
+                        Badge(stringResource(R.string.addlocal_console_folder, Systems.byFolder(File(current).name)!!.name), Palette.accent)
                     } else {
-                        Muted("Choisissez le dossier qui contient vos dossiers de consoles (snes, psx, gc…).")
+                        Muted(stringResource(R.string.addlocal_pick_root_hint))
                     }
                     ButtonRow {
-                        ActionButton("Choisir ce dossier", primary = true, modifier = Modifier.focusRequester(chooseFocus), onClick = {
+                        ActionButton(stringResource(R.string.addlocal_choose), primary = true, modifier = Modifier.focusRequester(chooseFocus), onClick = {
                             val f = File(current)
-                            model.addSource(Source.Local(label = f.name.ifBlank { "Dossier" }, path = f.absolutePath))
+                            model.addSource(
+                                Source.Local(
+                                    label = f.name.ifBlank { defaultLocalLabel },
+                                    path = f.absolutePath,
+                                ),
+                            )
                             onDone()
                         })
-                        ActionButton("Dossier parent", onClick = {
+                        ActionButton(stringResource(R.string.addlocal_parent), onClick = {
                             val parent = File(current).parentFile
                             path = if (parent == null || volumes.any { it.path == current }) null else parent.absolutePath
                         })
@@ -295,7 +316,7 @@ fun AddLocalScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
                 }
             }
             if (dirs == null) {
-                item { Muted("Ce dossier est illisible. Vérifiez l'accès aux fichiers dans les réglages.") }
+                item { Muted(stringResource(R.string.addlocal_unreadable)) }
             } else {
                 items(dirs, key = { it.absolutePath }) { d ->
                     Tile(onClick = { path = d.absolutePath }, modifier = Modifier.fillMaxWidth()) {
@@ -312,7 +333,9 @@ fun AddLocalScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
 
 @Composable
 fun AddSmbScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
-    var label by rememberSaveable { mutableStateOf("Serveur") }
+    val defaultLabel = stringResource(R.string.addsmb_default_label)
+    val missingFields = stringResource(R.string.addsmb_error_missing_fields)
+    var label by rememberSaveable { mutableStateOf(defaultLabel) }
     var host by rememberSaveable { mutableStateOf("") }
     var share by rememberSaveable { mutableStateOf("") }
     var folder by rememberSaveable { mutableStateOf("") }
@@ -320,55 +343,60 @@ fun AddSmbScreen(model: AppModel, onBack: () -> Unit, onDone: () -> Unit) {
     var password by rememberSaveable { mutableStateOf("") }
     var domain by rememberSaveable { mutableStateOf("") }
     var result by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
     var testing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun current() = Source.Smb(label = label.ifBlank { host }, host = host, share = share, path = folder, user = user, password = password, domain = domain)
 
-    Screen("Ajouter un serveur (SMB)", onBack) {
+    Screen(stringResource(R.string.addsmb_title), onBack) {
         item {
-            Muted("NAS (Synology, QNAP…), PC Windows avec un dossier partagé, ou serveur Samba. Les jeux doivent être rangés dans un dossier par console.")
+            Muted(stringResource(R.string.addsmb_help))
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Field("Nom affiché", label, { label = it }, Modifier.weight(1f))
-                    Field("Adresse du serveur", host, { host = it }, Modifier.weight(1f), hint = "192.168.1.20", keyboardType = KeyboardType.Uri)
+                    Field(stringResource(R.string.addsmb_field_label), label, { label = it }, Modifier.weight(1f))
+                    Field(stringResource(R.string.addsmb_field_host), host, { host = it }, Modifier.weight(1f), hint = "192.168.1.20", keyboardType = KeyboardType.Uri)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Field("Partage", share, { share = it }, Modifier.weight(1f), hint = "jeux")
-                    Field("Sous-dossier (facultatif)", folder, { folder = it }, Modifier.weight(1f), hint = "roms")
+                    Field(stringResource(R.string.addsmb_field_share), share, { share = it }, Modifier.weight(1f), hint = stringResource(R.string.addsmb_field_share_hint))
+                    Field(stringResource(R.string.addsmb_field_folder), folder, { folder = it }, Modifier.weight(1f), hint = "roms")
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Field("Utilisateur (vide = invité)", user, { user = it }, Modifier.weight(1f))
-                    Field("Mot de passe", password, { password = it }, Modifier.weight(1f), password = true)
-                    Field("Domaine (facultatif)", domain, { domain = it }, Modifier.weight(1f))
+                    Field(stringResource(R.string.addsmb_field_user), user, { user = it }, Modifier.weight(1f))
+                    Field(stringResource(R.string.addsmb_field_password), password, { password = it }, Modifier.weight(1f), password = true)
+                    Field(stringResource(R.string.addsmb_field_domain), domain, { domain = it }, Modifier.weight(1f))
                 }
                 result?.let {
-                    Text(it, style = MaterialTheme.typography.bodyLarge, color = if (it.startsWith("Échec")) Palette.bad else Palette.accent)
+                    Text(it, style = MaterialTheme.typography.bodyLarge, color = if (failed) Palette.bad else Palette.accent)
                 }
                 ButtonRow {
-                    ActionButton(if (testing) "Test en cours…" else "Tester la connexion", onClick = {
+                    ActionButton(stringResource(if (testing) R.string.addsmb_testing else R.string.addsmb_test), onClick = {
                         if (host.isBlank() || share.isBlank()) {
-                            result = "Échec : renseignez l'adresse et le partage."
+                            result = missingFields
+                            failed = true
                         } else if (!testing) {
                             testing = true
                             scope.launch {
-                                result = model.testSmb(current())
+                                val (ok, message) = model.testSmb(current())
+                                failed = !ok
+                                result = message
                                 testing = false
                             }
                         }
                     })
-                    ActionButton("Enregistrer", primary = true, onClick = {
+                    ActionButton(stringResource(R.string.addsmb_save), primary = true, onClick = {
                         if (host.isBlank() || share.isBlank()) {
-                            result = "Échec : renseignez l'adresse et le partage."
+                            result = missingFields
+                            failed = true
                         } else {
                             model.addSource(current())
                             onDone()
                         }
                     })
                 }
-                Muted("Le mot de passe est enregistré dans le stockage privé de l'app, sur cette TV uniquement.")
+                Muted(stringResource(R.string.addsmb_password_note))
             }
         }
     }

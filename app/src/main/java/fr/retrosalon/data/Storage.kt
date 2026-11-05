@@ -3,8 +3,9 @@ package fr.retrosalon.data
 import android.content.Context
 import android.os.Environment
 import android.os.storage.StorageManager
+import fr.retrosalon.R
+import fr.retrosalon.UiException
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
 
 /** Une entrée de dossier, commune au stockage local et au SMB. */
@@ -23,7 +24,7 @@ class LocalFs(private val root: String) : SourceFs {
 
     override fun list(rel: String): List<Entry> {
         val dir = file(rel)
-        val files = dir.listFiles() ?: throw IOException("Dossier illisible : ${dir.path}")
+        val files = dir.listFiles() ?: throw UiException(R.string.err_folder_unreadable, dir.path)
         return files.filter { !it.isHidden }.map { Entry(it.name, it.isDirectory, if (it.isDirectory) 0 else it.length()) }
     }
 
@@ -39,12 +40,12 @@ object Volumes {
         val sm = context.getSystemService(StorageManager::class.java)
         val result = mutableListOf<Volume>()
         val internal = Environment.getExternalStorageDirectory()
-        result += Volume("Stockage interne", internal.absolutePath)
+        result += Volume(context.getString(R.string.storage_internal), internal.absolutePath)
         File("/storage").listFiles()
             ?.filter { it.isDirectory && it.name != "self" && it.name != "emulated" }
             ?.forEach { dir ->
                 val desc = runCatching { sm.getStorageVolume(dir)?.getDescription(context) }.getOrNull()
-                result += Volume(desc ?: "Disque ${dir.name}", dir.absolutePath)
+                result += Volume(desc ?: context.getString(R.string.storage_disk, dir.name), dir.absolutePath)
             }
         return result
     }

@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 var screen by rememberSaveable { mutableStateOf("home") }
                 val requestStorage = {
                     if (!StorageAccess.request(this)) {
-                        Toast.makeText(this, "Écran indisponible sur cette TV : voir Réglages pour la commande adb.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.main_storage_screen_unavailable), Toast.LENGTH_LONG).show()
                         screen = "settings"
                     }
                 }

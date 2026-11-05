@@ -13,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import fr.retrosalon.LaunchState
+import fr.retrosalon.R
 
 @Composable
 fun LaunchOverlay(state: LaunchState, onDismiss: () -> Unit) {
@@ -33,11 +35,11 @@ fun LaunchOverlay(state: LaunchState, onDismiss: () -> Unit) {
             Text(state.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             if (state.error != null) {
                 Text(state.error, style = MaterialTheme.typography.bodyLarge, color = Palette.bad)
-                ActionButton("Fermer", onClick = onDismiss, modifier = Modifier.focusRequester(focus), primary = true)
+                ActionButton(stringResource(R.string.overlay_close), onClick = onDismiss, modifier = Modifier.focusRequester(focus), primary = true)
             } else {
                 Muted(state.step)
                 ProgressBar(state.progress, Modifier.fillMaxWidth())
-                ActionButton("Annuler", onClick = onDismiss, modifier = Modifier.focusRequester(focus))
+                ActionButton(stringResource(R.string.overlay_cancel), onClick = onDismiss, modifier = Modifier.focusRequester(focus))
             }
         }
     }

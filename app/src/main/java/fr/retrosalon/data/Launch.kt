@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.Process
 import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
+import fr.retrosalon.R
+import fr.retrosalon.userMessage
 import java.io.File
 
 object Launch {
@@ -39,11 +41,11 @@ object Launch {
     /** Lance le jeu. Renvoie un message d'erreur, ou null si l'émulateur a démarré. */
     fun start(context: Context, launcher: Launcher, prepared: Prepared): String? {
         val candidates = launcher.components.filter { isInstalled(context, it.first) }
-        if (candidates.isEmpty()) return "${launcher.label} n'est pas installé."
+        if (candidates.isEmpty()) return context.getString(R.string.launch_not_installed, launcher.label)
         // MAME reçoit les dossiers entre apostrophes : une apostrophe dans un nom casserait la commande.
         val usesRomPath = launcher.extras.any { it.second == Arg.MameRomPath }
         if (usesRomPath && listOf(prepared.file.parent.orEmpty(), prepared.systemDir.absolutePath).any { '\'' in it }) {
-            return "${launcher.label} ne peut pas lancer un jeu dont le dossier contient une apostrophe. Renommez le dossier."
+            return context.getString(R.string.launch_apostrophe_in_folder, launcher.label)
         }
         for ((pkg, cls) in candidates) {
             val intent = buildIntent(context, launcher, pkg, cls, prepared)
@@ -53,10 +55,10 @@ object Launch {
             } catch (_: ActivityNotFoundException) {
                 continue
             } catch (e: SecurityException) {
-                return "${launcher.label} a refusé le lancement : ${e.message}"
+                return context.getString(R.string.launch_refused, launcher.label, e.userMessage(context))
             }
         }
-        return "Impossible d'ouvrir ${launcher.label}. Mettez l'émulateur à jour."
+        return context.getString(R.string.launch_open_failed, launcher.label)
     }
 
     private fun buildIntent(context: Context, launcher: Launcher, pkg: String, cls: String, prepared: Prepared): Intent {
