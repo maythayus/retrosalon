@@ -16,6 +16,7 @@ RetroSalon puts all your retro games in a single library on the TV, from the NES
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV (also works on phones and tablets in landscape) |
 | Interface language | French |
+| Licence | [MIT](LICENSE) |
 
 ---
 
@@ -274,5 +275,9 @@ Xbox and Xbox Nano are trademarks of Microsoft. Console names are trademarks of 
 - The launch intents (activity names, extras and how each emulator expects the game) are adapted from the Android configuration of [ES-DE](https://gitlab.com/es-de/emulationstation-de) (MIT licence).
 - SMB support uses [smbj](https://github.com/hierynomus/smbj) (Apache 2.0).
 - Thanks to the authors of every emulator listed above.
+
+## License
+
+RetroSalon is released under the [MIT License](LICENSE). Third-party components keep their own licences.
 
 The full copyright notices and licence texts are in [legal/THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md). That covers the ES-DE material and every library bundled in the APK, and the same file ships inside the APK.
