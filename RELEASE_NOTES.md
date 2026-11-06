@@ -1,5 +1,41 @@
 # Release notes
 
+## RetroSalon 0.2.1 (2026-11-06)
+
+**Network games already in the cache now play when the server is off.**
+
+In 0.2.0, RetroSalon contacted the server before every launch of a network game, even when the game was already copied to the TV. With the NAS or PC off, the game didn't start.
+
+- A game already in the cache now starts straight away, without contacting the server.
+- When the server can't be reached, RetroSalon plays the copy in the cache, even if the game has changed on the server since it was copied. A game that isn't in the cache still shows the connection error, as in 0.2.0.
+- Copies from the server are safer:
+  - Files are copied under a temporary name and put in place together once everything is copied. A cancelled or interrupted copy never mixes two versions of a game, and leaves the copy already in the cache as it was. That copy still plays when the server is off.
+  - Files that finished copying are kept, so the next launch copies only what is missing.
+  - If a file's size changes on the server during the copy, it isn't kept, and RetroSalon asks you to try again.
+  - When the game's main file was removed from the server, RetroSalon says "File not found".
+  - Only one copy runs at a time. Emptying the cache or changing its limit waits for the copy in progress.
+- Other fixes:
+  - `.cue` and `.m3u` files saved with a byte order mark (BOM), as some Windows editors do, are read correctly.
+  - A CloneCD game (`.ccd`) without its optional `.sub` file plays from the cache when the server is off, after RetroSalon has tried to reach the server.
+  - If you cancel a launch and start another game right away, the cancelled launch can no longer change the new launch screen.
+
+**Known limit:** a cached game is checked against the server's game list by the size of its main file. If you replace a game's tracks or discs on the server but keep its `.cue`, `.gdi`, `.ccd` or `.m3u` file as it is, use *Empty cache* in *Settings* so the new files are copied.
+
+**Requirements:** unchanged, Android 8.0 (API 26) or newer.
+
+**Updating from 0.2.0 or 0.1.0:** install the new APK over it, no need to uninstall. It is signed with the same key, so your sources, settings and cached games are kept.
+
+### Tested
+
+- Unit tests (39, including 24 new tests for the cache) and Android lint (0 errors) pass.
+- The APK has the same signing certificate as the 0.2.0 APK (checked with apksigner).
+- Checked with this APK on an Android 15 emulator (Pixel 9a profile), with an SMB source whose server is off:
+  - a PSP game already in the cache starts in PPSSPP (0.2.0 fails this test);
+  - a game that isn't in the cache shows "Couldn't prepare the game: Server unreachable…";
+  - after that error, the game in the cache still starts.
+- Checked with a test build on the same emulator: when the game list gives a different size for a cached game, the cached copy still starts with the server off.
+- Not checked yet: a copy from a real SMB server (NAS or Windows PC), a real Android TV, and Android 8 to 10.
+
 ## RetroSalon 0.2.0 (2026-11-05)
 
 **The interface now speaks English and French.**

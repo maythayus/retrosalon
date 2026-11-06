@@ -57,6 +57,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
         private set
 
     private var launchJob: Job? = null
+    private var launchGen = 0
 
     /** Texte traduit dans la langue du système. */
     private fun str(@StringRes id: Int, vararg args: Any): String =
@@ -119,6 +120,9 @@ class AppModel(app: Application) : AndroidViewModel(app) {
 
     fun play(game: Game) {
         if (launchJob?.isActive == true) return
+        // Numéro de ce lancement : un lancement annulé, encore en train de se terminer, ne doit pas
+        // modifier l'écran d'un lancement plus récent (ni ses messages d'erreur).
+        val gen = ++launchGen
         val app = getApplication<Application>()
         val system = Systems.byId(game.systemId) ?: return
         val source = sources.firstOrNull { it.id == game.sourceId }
@@ -132,20 +136,29 @@ class AppModel(app: Application) : AndroidViewModel(app) {
             launch = LaunchState(game.title, "", error = str(R.string.model_launch_no_emulator, system.name, names))
             return
         }
-        launch = LaunchState(
-            game.title,
-            if (source is Source.Smb && !cache.isCached(source, game)) str(R.string.model_launch_copying_from, source.label)
-            else str(R.string.model_launch_starting, launcher.label),
-            progress = null,
-        )
+        // « Copie depuis … » s'affiche seulement si le cache doit contacter le serveur : c'est
+        // prepare(), hors du fil principal, qui le sait (il lit le disque, parfois une clé USB lente).
+        launch = LaunchState(game.title, str(R.string.model_launch_starting, launcher.label), progress = null)
         launchJob = viewModelScope.launch {
+            // N'écrit dans l'écran de lancement que si ce lancement est toujours le courant.
+            fun update(change: (LaunchState?) -> LaunchState?) {
+                if (launchGen == gen) launch = change(launch)
+            }
+            fun post(change: (LaunchState) -> LaunchState) {
+                viewModelScope.launch(Dispatchers.Main) { update { it?.let(change) } }
+            }
             try {
                 val prepared = withContext(Dispatchers.IO) {
-                    cache.prepare(source, game) { done, total ->
+                    cache.prepare(
+                        source,
+                        game,
+                        // Une copie annulée encore en cours est attendue par le cache lui-même.
+                        onConnect = { post { it.copy(step = str(R.string.model_launch_copying_from, source.label)) } },
+                    ) { done, total ->
                         if (total > 0) {
                             val p = (done.toDouble() / total).toFloat().coerceIn(0f, 1f)
-                            viewModelScope.launch(Dispatchers.Main) {
-                                launch = launch?.copy(
+                            post {
+                                it.copy(
                                     progress = p,
                                     step = str(R.string.model_launch_copy_progress, formatBytes(app, done), formatBytes(app, total)),
                                 )
@@ -153,20 +166,21 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                         }
                     }
                 }
-                launch = launch?.copy(step = str(R.string.model_launch_starting, launcher.label), progress = 1f)
+                update { it?.copy(step = str(R.string.model_launch_starting, launcher.label), progress = 1f) }
                 val error = Launch.start(app, launcher, prepared)
-                launch = if (error != null) launch?.copy(error = error) else null
+                update { if (error != null) it?.copy(error = error) else null }
                 refreshCacheUsage()
             } catch (e: CancellationException) {
-                launch = null
+                update { null }
                 throw e
             } catch (e: Exception) {
-                launch = launch?.copy(error = str(R.string.model_launch_prepare_failed, e.userMessage(app)))
+                update { it?.copy(error = str(R.string.model_launch_prepare_failed, e.userMessage(app))) }
             }
         }
     }
 
     fun dismissLaunch() {
+        launchGen++
         launchJob?.cancel()
         launch = null
     }

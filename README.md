@@ -11,7 +11,7 @@ RetroSalon puts all your retro games in a single library on the TV, from the NES
 
 | | |
 |---|---|
-| Version | 0.2.0 |
+| Version | 0.2.1 |
 | Minimum Android | **Android 8.0 (API 26)** |
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV (also works on phones and tablets in landscape) |
@@ -148,11 +148,13 @@ Add an **SMB share** (Synology, QNAP, a shared folder on a Windows PC, Samba…)
 
 When you start a network game:
 
-1. RetroSalon copies it to the TV, with a progress bar. *Cancel* stops the copy.
-2. The game is kept in the **cache** (`/storage/emulated/0/RetroSalon/jeux/<console>/` by default), so the next launch is instant.
+1. RetroSalon copies it to the TV, with a progress bar. *Cancel* stops the copy. Files that finished copying are kept for the next try, and a stopped copy never mixes two versions of a game.
+2. The game is kept in the **cache** (`/storage/emulated/0/RetroSalon/jeux/<console>/` by default). The next launch is instant and doesn't contact the server, so a game already in the cache plays even when the NAS or PC is off. When RetroSalon can't reach the server, the server's games stay in the list.
 3. When the cache goes over its limit (32 GB by default, adjustable from 2 GB to 2,000 GB), the games you played least recently are deleted from the TV. They stay on the server.
 
 You can move the cache to a USB drive, change the limit, or empty it in RetroSalon's *Settings*. Moving the cache only changes where new games are copied; empty it first to free the old location. Emulator save files are kept by the emulators, never in the cache.
+
+A cached game is checked against the server's game list by the size of its main file. If you replace the tracks or discs of a game on the server but keep its `.cue`, `.gdi`, `.ccd` or `.m3u` file as it is, use *Empty cache* so the new files are copied.
 
 File names sent by the server that would point outside the console's cache folder (an absolute path, or `..`) are refused.
 
@@ -200,9 +202,9 @@ RetroSalon passes the game to each emulator the way that emulator expects. The *
 
 ## Installing
 
-1. Download `RetroSalon-0.2.0.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
+1. Download `RetroSalon-0.2.1.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
 2. Install it on the TV. Choose one:
-   - over the network with `adb install RetroSalon-0.2.0.apk`;
+   - over the network with `adb install RetroSalon-0.2.1.apk`;
    - with an app such as *Downloader*;
    - from a USB stick with a file manager.
 

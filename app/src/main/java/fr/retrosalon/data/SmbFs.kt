@@ -1,9 +1,11 @@
 package fr.retrosalon.data
 
 import com.hierynomus.msdtyp.AccessMask
+import com.hierynomus.mserref.NtStatus
 import com.hierynomus.msfscc.FileAttributes
 import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.mssmb2.SMB2ShareAccess
+import com.hierynomus.mssmb2.SMBApiException
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.SmbConfig
 import com.hierynomus.smbj.auth.AuthenticationContext
@@ -13,6 +15,7 @@ import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.DiskShare
 import fr.retrosalon.R
 import fr.retrosalon.UiException
+import java.io.FileNotFoundException
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -67,8 +70,13 @@ class SmbFs(private val source: Source.Smb) : SourceFs {
                 Entry(it.fileName, dir, if (dir) 0 else it.endOfFile)
             }
 
-    override fun size(rel: String): Long =
+    /** Taille d'un fichier ; FileNotFoundException s'il n'existe pas (à distinguer d'une coupure réseau). */
+    override fun size(rel: String): Long = try {
         share.getFileInformation(smbPath(rel)).standardInformation.endOfFile
+    } catch (e: SMBApiException) {
+        if (e.status in NOT_FOUND) throw FileNotFoundException(rel).apply { initCause(e) }
+        throw e
+    }
 
     override fun open(rel: String): InputStream {
         val file = share.openFile(
@@ -88,6 +96,15 @@ class SmbFs(private val source: Source.Smb) : SourceFs {
 
     companion object {
         const val SMB_PORT = 445
+
+        /** Statuts SMB d'un fichier ou d'un dossier absent du partage (ou dont le nom ne peut pas y exister). */
+        private val NOT_FOUND = setOf(
+            NtStatus.STATUS_NO_SUCH_FILE,
+            NtStatus.STATUS_OBJECT_NAME_NOT_FOUND,
+            NtStatus.STATUS_OBJECT_PATH_NOT_FOUND,
+            NtStatus.STATUS_OBJECT_NAME_INVALID,
+            NtStatus.STATUS_NOT_FOUND,
+        )
         private const val PROBE_TIMEOUT_MS = 3_000
 
         /**

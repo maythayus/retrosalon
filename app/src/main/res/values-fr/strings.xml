@@ -37,6 +37,7 @@
     <string name="emulators_status_requires">Demande %1$s</string>
     <string name="emulators_title">Émulateurs par console</string>
     <string name="err_cannot_write">Impossible d\'écrire %1$s</string>
+    <string name="err_copy_changed">%1$s a changé sur le serveur pendant la copie. Réessayez.</string>
     <string name="err_file_name_refused">Nom de fichier refusé, il sort du dossier du jeu : %1$s</string>
     <string name="err_file_not_found">Fichier introuvable : %1$s. Lancez « Actualiser ».</string>
     <string name="err_folder_unreadable">Dossier illisible : %1$s</string>
