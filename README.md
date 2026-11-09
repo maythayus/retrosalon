@@ -5,13 +5,13 @@
 RetroSalon puts all your retro games in a single library on the TV, from the NES to the Switch. Pick a game with the controller and RetroSalon opens it in the right emulator. You no longer need to open RetroArch, then Dolphin, then PPSSPP, or remember which app runs which console.
 
 - **24 consoles, one screen.** Nintendo, Sega, Sony, NEC, SNK, Atari and arcade games, sorted by console.
-- **Made for the Xbox Nano controller.** The whole interface works with the D-pad and the A/B buttons, and RetroSalon tells you when the controller is connected.
+- **Made for the Xbox Nano controller.** The whole interface works with the D-pad and the A/B buttons, and RetroSalon shows each connected controller, with its battery level when the controller reports it.
 - **Hybrid storage.** Games can be on the TV, on a USB drive, or on a NAS/PC at home. Network games are copied to the TV when you press play, then kept in a cache.
 - **Uses the emulators you already have.** RetroSalon is a launcher; it includes no emulator, no ROM and no BIOS.
 
 | | |
 |---|---|
-| Version | 0.2.1 |
+| Version | 0.2.2 |
 | Minimum Android | **Android 8.0 (API 26)** |
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV (also works on phones and tablets in landscape) |
@@ -32,7 +32,18 @@ The Xbox Nano (Bluetooth, USB-C) connects to Android like any Xbox Wireless Cont
 2. Turn the controller on with the Xbox button, then hold the **pair** button until the logo blinks fast.
 3. Pick **Xbox Wireless Controller** in the list.
 
-RetroSalon shows the controller's name in the sidebar (*Controller: Xbox Wireless Controller*). If no controller is connected, it shows a reminder to pair the Xbox Nano. RetroSalon's *Settings* screen repeats these steps.
+RetroSalon shows each connected controller in the sidebar, with its battery level when the controller reports it (*Controller: Xbox Wireless Controller · 80%*). The badge turns orange at 20% or less, unless Android reports that the controller is charging or plugged in. If no controller is connected, it shows a reminder to pair the Xbox Nano. RetroSalon's *Settings* screen repeats these steps.
+
+**Battery level.** RetroSalon reads it in one of two ways:
+
+- **From Android**, on Android 12 and newer, for controllers whose driver reports a battery, such as the PlayStation DualShock 4 and DualSense. Nothing needs to be granted, and RetroSalon also shows when the controller is charging.
+- **From the controller's Bluetooth battery service**, for Bluetooth LE controllers such as the Xbox Nano and Xbox Wireless Controllers with recent firmware, which don't report their battery to Android apps. This gives the level, but not whether the controller is charging, so the badge can turn orange even on the charger. Older Xbox firmware uses classic Bluetooth and shows no level; a firmware update (below) can fix this.
+  - On Android 12 and newer, it needs the *Nearby devices* permission: with the controller connected, press *Show the controller battery* in RetroSalon's *Settings*. The button appears while a connected controller shows no level. RetroSalon uses the permission only to read the battery level.
+  - On Android 8 to 11, nothing needs to be granted.
+
+RetroSalon refreshes the level every minute or two while it is on screen, and stops while you play. A controller that reports no battery, for example an Xbox controller connected with a USB cable, shows no level.
+
+> The Bluetooth battery reading hasn't been tested with a real Xbox controller yet.
 
 **Keeping the controller up to date.** Firmware updates can fix Bluetooth problems such as lag or disconnections. The usual way is the *Xbox Accessories* app on Windows, or an Xbox console. Some sources say the **Xbox app on Android** can also update it. This isn't the main official route, and it can be slower:
 
@@ -178,6 +189,8 @@ On first launch, RetroSalon shows a welcome screen that explains what it needs, 
 
 Without this access, RetroSalon can't read games on the TV or a USB drive, or write the cache. *Later* skips the step; a reminder then stays on the home screen and in *Settings*.
 
+**Nearby devices** (optional, Android 12 and newer) is asked only when you press *Show the controller battery* in *Settings*; the button appears while a connected controller shows no battery level. RetroSalon uses it to read the battery level of Bluetooth controllers such as the Xbox Nano. If you refuse, everything else works the same, without the level. The button then becomes *Open in the TV settings*, where you can allow it later: *Apps → RetroSalon → Permissions*.
+
 Some Android TV models don't have the *All files access* screen. In that case, grant it from a computer with `adb` (USB or network debugging enabled on the TV):
 
 ```bash
@@ -202,9 +215,9 @@ RetroSalon passes the game to each emulator the way that emulator expects. The *
 
 ## Installing
 
-1. Download `RetroSalon-0.2.1.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
+1. Download `RetroSalon-0.2.2.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
 2. Install it on the TV. Choose one:
-   - over the network with `adb install RetroSalon-0.2.1.apk`;
+   - over the network with `adb install RetroSalon-0.2.2.apk`;
    - with an app such as *Downloader*;
    - from a USB stick with a file manager.
 
@@ -254,7 +267,8 @@ app/src/main/java/fr/retrosalon/
 ├── MainActivity.kt        screens and navigation, first-launch flow
 ├── AppModel.kt            library, scanning, launch and cache state
 ├── StorageAccess.kt       all-files access request
-├── Gamepads.kt            connected controller detection
+├── Gamepads.kt            controllers and battery rules
+├── PadMonitor.kt          follows connected controllers and reads their battery
 ├── data/
 │   ├── Catalog.kt         consoles, folder names, emulators and launch intents
 │   ├── Scanner.kt         finds games in console folders

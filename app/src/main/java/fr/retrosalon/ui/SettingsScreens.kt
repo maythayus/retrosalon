@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +41,6 @@ import fr.retrosalon.Gamepads
 import fr.retrosalon.R
 import fr.retrosalon.StorageAccess
 import fr.retrosalon.formatBytes
-import fr.retrosalon.rememberGamepads
 import fr.retrosalon.data.Launch
 import fr.retrosalon.data.Source
 import fr.retrosalon.data.Systems
@@ -84,6 +84,8 @@ fun SettingsScreen(
     onAddLocal: () -> Unit,
     onAddSmb: () -> Unit,
     onEmulators: () -> Unit,
+    onAllowBluetooth: () -> Unit,
+    onOpenAppSettings: () -> Unit,
 ) {
     val context = LocalContext.current
     val volumes = remember { Volumes.list(context) }
@@ -91,22 +93,41 @@ fun SettingsScreen(
 
     Screen(stringResource(R.string.settings_title), onBack) {
         item {
-            val pads = rememberGamepads()
+            val pads by model.gamepads.pads.collectAsState()
+            val bluetoothGranted by model.gamepads.bluetoothGranted.collectAsState()
+            val bluetoothDenied by model.gamepads.bluetoothDenied.collectAsState()
             Panel(Modifier.fillMaxWidth()) {
                 SectionTitle(stringResource(R.string.settings_controller_title))
                 if (pads.isEmpty()) {
                     Badge(stringResource(R.string.settings_controller_none), Palette.warn)
                 } else {
                     pads.forEach {
-                        Badge(
-                            if (Gamepads.isXbox(it)) {
-                                stringResource(R.string.settings_controller_connected, it)
+                        PadBadge(
+                            if (Gamepads.isXbox(it.name)) {
+                                stringResource(R.string.settings_controller_connected, it.name)
                             } else {
-                                stringResource(R.string.settings_controller_other, it)
+                                stringResource(R.string.settings_controller_other, it.name)
                             },
-                            Palette.accent,
+                            it,
                         )
                     }
+                }
+                // Batterie des manettes Bluetooth comme la Xbox : il faut « Appareils à proximité » (Android 12+).
+                // Pas avant la première lecture : une DualShock 4 qui arrive n'en a pas besoin. Même règle
+                // que la lecture Bluetooth : une manette sans pourcentage.
+                if (Build.VERSION.SDK_INT >= 31 && !bluetoothGranted && pads.any { it.battery?.percent == null && !it.batteryPending }) {
+                    // Un seul bouton, dont le texte change après un refus : il garde le focus de la télécommande.
+                    Muted(
+                        stringResource(
+                            if (bluetoothDenied) R.string.settings_controller_battery_denied else R.string.settings_controller_battery_help,
+                        ),
+                    )
+                    ActionButton(
+                        stringResource(
+                            if (bluetoothDenied) R.string.settings_controller_battery_open else R.string.settings_controller_battery_allow,
+                        ),
+                        onClick = if (bluetoothDenied) onOpenAppSettings else onAllowBluetooth,
+                    )
                 }
                 Muted(stringResource(R.string.settings_controller_step1))
                 Muted(stringResource(R.string.settings_controller_step2))

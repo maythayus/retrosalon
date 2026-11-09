@@ -1,11 +1,15 @@
 package fr.retrosalon
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +34,10 @@ class MainActivity : ComponentActivity() {
 
     /** Écran d'accueil du premier lancement, qui demande l'accès aux fichiers. */
     private var showWelcome by mutableStateOf(false)
+
+    private val bluetoothRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        model.gamepads.permissionResult(granted)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +96,8 @@ class MainActivity : ComponentActivity() {
                             onAddLocal = { screen = "addLocal" },
                             onAddSmb = { screen = "addSmb" },
                             onEmulators = { screen = "emulators" },
+                            onAllowBluetooth = { bluetoothRequest.launch(model.gamepads.bluetoothPermission) },
+                            onOpenAppSettings = ::openAppSettings,
                         )
                         "emulators" -> EmulatorsScreen(model, onBack = { screen = "settings" })
                         "addLocal" -> AddLocalScreen(model, onBack = { screen = "settings" }, onDone = { screen = "home" })
@@ -99,10 +109,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        model.gamepads.start()
+    }
+
+    override fun onStop() {
+        // Libère le Bluetooth de la manette pendant le jeu. Une simple recréation de l'écran (langue,
+        // affichage) ne coupe rien.
+        if (!isChangingConfigurations) model.gamepads.stop()
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         updateStorage()
         model.refreshInstalled()
+        // L'autorisation Bluetooth a pu être accordée dans les paramètres de la TV.
+        model.gamepads.permissionChanged()
+    }
+
+    /** Écran des paramètres de RetroSalon (autorisations), quand la TV le propose. */
+    private fun openAppSettings() {
+        runCatching {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+        }.onFailure {
+            Toast.makeText(this, getString(R.string.settings_controller_battery_no_screen), Toast.LENGTH_LONG).show()
+        }
     }
 
     /** Relit l'autorisation ; si elle vient d'être accordée, relance l'analyse des sources. */

@@ -81,6 +81,9 @@
     <string name="model_smb_ok_consoles">Connexion réussie. Consoles trouvées : %1$s.</string>
     <string name="overlay_cancel">Annuler</string>
     <string name="overlay_close">Fermer</string>
+    <string name="pad_percent">%1$s\u00A0%%</string>
+    <string name="pad_power_charging">en charge</string>
+    <string name="pad_power_plugged">branchée</string>
     <string name="settings_add_local">Ajouter un dossier (TV ou USB)</string>
     <string name="settings_add_smb">Ajouter un serveur (SMB)</string>
     <string name="settings_back">← Retour</string>
@@ -91,6 +94,11 @@
     <string name="settings_cache_more">+ 8 Go</string>
     <string name="settings_cache_title">Cache des jeux du serveur</string>
     <string name="settings_cache_used">Utilisé : %1$s sur %2$d Go</string>
+    <string name="settings_controller_battery_allow">Afficher la batterie de la manette</string>
+    <string name="settings_controller_battery_denied">Autorisation refusée. Pour afficher la batterie, autorisez « Appareils à proximité » pour RetroSalon dans les paramètres de la TV : Applications → RetroSalon → Autorisations.</string>
+    <string name="settings_controller_battery_help">Si votre manette est en Bluetooth, comme la Xbox Nano, RetroSalon a besoin de l\'autorisation « Appareils à proximité » pour afficher sa batterie. Elle sert uniquement à lire le niveau de batterie de la manette.</string>
+    <string name="settings_controller_battery_no_screen">Écran indisponible sur cette TV. Dans les paramètres de la TV, allez dans Applications → RetroSalon → Autorisations.</string>
+    <string name="settings_controller_battery_open">Ouvrir dans les paramètres de la TV</string>
     <string name="settings_controller_connected">Connectée : %1$s</string>
     <string name="settings_controller_none">Aucune manette connectée</string>
     <string name="settings_controller_other">Manette : %1$s</string>

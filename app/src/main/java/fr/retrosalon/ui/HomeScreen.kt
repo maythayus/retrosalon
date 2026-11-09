@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +43,6 @@ import androidx.tv.material3.Text
 import fr.retrosalon.AppModel
 import fr.retrosalon.R
 import fr.retrosalon.formatBytes
-import fr.retrosalon.rememberGamepads
 import fr.retrosalon.data.Game
 import fr.retrosalon.data.Source
 import fr.retrosalon.data.Systems
@@ -83,11 +83,11 @@ fun HomeScreen(
                 pluralStringResource(R.plurals.home_games_count, games.size, games.size) + " · " +
                     pluralStringResource(R.plurals.home_sources_count, model.sources.size, model.sources.size),
             )
-            val pads = rememberGamepads()
+            val pads by model.gamepads.pads.collectAsState()
             if (pads.isEmpty()) {
                 Badge(stringResource(R.string.home_no_controller), Palette.warn)
             } else {
-                Badge(stringResource(R.string.home_controller, pads.first()), Palette.accent)
+                pads.forEach { PadBadge(stringResource(R.string.home_controller, it.name), it) }
             }
             Spacer(Modifier.height(6.dp))
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {

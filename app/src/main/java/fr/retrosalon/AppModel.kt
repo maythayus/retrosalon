@@ -35,6 +35,9 @@ class AppModel(app: Application) : AndroidViewModel(app) {
     val store = Store(app)
     val cache = GameCache(store)
 
+    /** Manettes connectées et leur batterie (suivies tant que l'app est visible). */
+    val gamepads = PadMonitor(app, viewModelScope)
+
     var sources by mutableStateOf(store.sources)
         private set
     var games by mutableStateOf(store.loadLibrary())
@@ -240,5 +243,9 @@ class AppModel(app: Application) : AndroidViewModel(app) {
             cache.clear()
             refreshCacheUsage()
         }
+    }
+
+    override fun onCleared() {
+        gamepads.stop()
     }
 }

@@ -82,6 +82,9 @@
     <string name="model_smb_ok_consoles">Connected. Consoles found: %1$s.</string>
     <string name="overlay_cancel">Cancel</string>
     <string name="overlay_close">Close</string>
+    <string name="pad_percent">%1$s%%</string>
+    <string name="pad_power_charging">charging</string>
+    <string name="pad_power_plugged">plugged in</string>
     <string name="settings_add_local">Add a folder (TV or USB)</string>
     <string name="settings_add_smb">Add a server (SMB)</string>
     <string name="settings_back">← Back</string>
@@ -92,6 +95,11 @@
     <string name="settings_cache_more">+ 8 GB</string>
     <string name="settings_cache_title">Server game cache</string>
     <string name="settings_cache_used">Used: %1$s of %2$d GB</string>
+    <string name="settings_controller_battery_allow">Show the controller battery</string>
+    <string name="settings_controller_battery_denied">Permission refused. To show the battery, allow “Nearby devices” for RetroSalon in the TV settings: Apps → RetroSalon → Permissions.</string>
+    <string name="settings_controller_battery_help">If your controller uses Bluetooth, like the Xbox Nano, RetroSalon needs the “Nearby devices” permission to show its battery. It is only used to read the controller’s battery level.</string>
+    <string name="settings_controller_battery_no_screen">Screen not available on this TV. In the TV settings, go to Apps → RetroSalon → Permissions.</string>
+    <string name="settings_controller_battery_open">Open in the TV settings</string>
     <string name="settings_controller_connected">Connected: %1$s</string>
     <string name="settings_controller_none">No controller connected</string>
     <string name="settings_controller_other">Controller: %1$s</string>

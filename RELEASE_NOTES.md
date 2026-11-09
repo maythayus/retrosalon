@@ -1,5 +1,32 @@
 # Release notes
 
+## RetroSalon 0.2.2 (2026-11-09)
+
+**Controllers now show their battery level.**
+
+- The sidebar and *Settings* show each connected controller with its battery level when the controller reports it, for example *Controller: Xbox Wireless Controller · 80%*. The badge turns orange at 20% or less, unless Android reports that the controller is charging or plugged in.
+- RetroSalon reads the level in one of two ways:
+  - **From Android**, on Android 12 and newer, for controllers whose driver reports a battery, such as the PlayStation DualShock 4 and DualSense. Nothing needs to be granted, and the badge also shows *charging* or *plugged in*.
+  - **From the controller's Bluetooth battery service**, for Bluetooth LE controllers such as the Xbox Nano and Xbox Wireless Controllers with recent firmware, which don't report their battery to Android apps. This gives the level, but not whether the controller is charging, so the badge can turn orange even on the charger.
+- A controller shows its level a few seconds after it connects. RetroSalon refreshes the level every minute or two while it is on screen, and stops while you play: it doesn't use Bluetooth during games.
+
+**New optional permission: *Nearby devices*** (Android 12 and newer). The Bluetooth reading needs it. RetroSalon asks for it only when you press *Show the controller battery* in *Settings*; the button appears while a connected controller shows no level. RetroSalon uses it only to read the battery level. If you refuse, everything else works as before, and the button becomes *Open in the TV settings*, where you can allow it later (*Apps → RetroSalon → Permissions*). On Android 8 to 11, nothing needs to be granted.
+
+**Requirements:** unchanged, Android 8.0 (API 26) or newer.
+
+**Updating from 0.2.1, 0.2.0 or 0.1.0:** install the new APK over it, no need to uninstall. It is signed with the same key, so your sources, settings and cached games are kept.
+
+### Tested
+
+- Unit tests (57, including 18 new tests for the battery rules) and Android lint (0 errors) pass.
+- The APK has the same signing certificate as the 0.2.1 APK (checked with apksigner).
+- Checked on an Android 15 emulator (Pixel 9a profile) with simulated controllers: a DualShock 4 created with Android's `hid` test tool, and a controller without a battery.
+  - The DualShock 4 shows 45%, 15% in orange, and "45% · charging"; in French, "45 % · en charge".
+  - A controller connected while RetroSalon was in the background shows no level when you come back, then its level about 5 seconds later.
+  - The *Show the controller battery* button appears for the controller without a battery, but not during the first seconds after a DualShock 4 connects. The system permission dialog opens. After a refusal, the button opens the TV settings and keeps the remote's focus. The refusal is remembered when the language or text size changes.
+  - This APK installs over the previous build and shows the DualShock 4 at 15% in orange.
+- Not checked yet: the Bluetooth battery service with a real Xbox controller (the emulator can't pair a Bluetooth controller), a real Android TV, and Android 8 to 11.
+
 ## RetroSalon 0.2.1 (2026-11-06)
 
 **Network games already in the cache now play when the server is off.**
