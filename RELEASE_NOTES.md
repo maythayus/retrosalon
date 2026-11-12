@@ -1,5 +1,38 @@
 # Release notes
 
+## RetroSalon 0.2.3 (2026-11-12)
+
+**RetroSalon now tells you whether your TV runs a 32-bit or 64-bit Android.**
+
+Some TV boxes run a 32-bit Android even with a 64-bit processor, for example the Freebox Pop player, and several emulators only exist in 64-bit.
+
+- On first launch, after the file access step, a new **Your TV** screen shows the Android version, whether Android runs in 32-bit or 64-bit, and whether the processor is ARM or x86. It is also shown once after updating from an older version.
+- It says what that means for the emulators:
+  - **32-bit:** Dolphin, Azahar, NetherSX2, ARMSX2, Eden and the 2024 version of MAME4droid can't be installed. The screen suggests what to use instead: the "32bit" download of RetroArch from retroarch.com; RetroArch's SwanStation core, DuckStation or ePSXe for the PlayStation; and MAME4droid 0.139u1, which needs games in the MAME 0.139 format.
+  - **64-bit:** every emulator RetroSalon supports can be installed, as long as the TV's Android version and power are enough. On an x86_64 TV that can't run 64-bit ARM apps, the screen lists the emulators that only exist for ARM.
+- *Got it* or Back closes the screen. The same information stays in *Settings → Emulators*.
+
+**One APK for every TV.** As before, the APK runs on 32-bit and 64-bit Android, ARM or x86. The README now says so, in a new *32-bit and 64-bit TVs* section.
+
+**Requirements:** unchanged, Android 8.0 (API 26) or newer.
+
+**Updating from 0.2.2, 0.2.1, 0.2.0 or 0.1.0:** install the new APK over it, no need to uninstall. It is signed with the same key, so your sources, settings and cached games are kept.
+
+### Tested
+
+- Unit tests (62, including 5 new tests for the 32-bit/64-bit detection, one with the Freebox Pop's values) and Android lint (0 errors) pass.
+- The APK has the same signing certificate as the 0.2.2 APK (checked with apksigner).
+- Checked on an Android 15 emulator (Pixel 9a profile, 64-bit x86 with ARM translation), in English and French:
+  - installed over 0.2.2, the *Your TV* screen appears once, shows "Android 15 · 64-bit · x86 processor (Intel or AMD)", and doesn't come back on the next launch;
+  - on a first launch: the welcome screen, then *Later*, then *Your TV*, then the home screen. *Got it* has the remote's focus and Back closes the screen;
+  - *Settings → Emulators* shows the same information.
+- The 32-bit text was checked with unit tests only: no 32-bit device or emulator was available.
+- Since 0.2.2: on a real Freebox Pop, the Xbox Nano's battery level shows correctly through its Bluetooth battery service.
+
+### Known issue
+
+- On the Freebox Pop, the remote's voice search can appear as a second controller named *virtual-search*. It has no effect on games.
+
 ## RetroSalon 0.2.2 (2026-11-09)
 
 **Controllers now show their battery level.**

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import fr.retrosalon.ui.HomeScreen
 import fr.retrosalon.ui.LaunchOverlay
 import fr.retrosalon.ui.RetroSalonTheme
 import fr.retrosalon.ui.SettingsScreen
+import fr.retrosalon.ui.TvInfoScreen
 import fr.retrosalon.ui.WelcomeScreen
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +37,9 @@ class MainActivity : ComponentActivity() {
     /** Écran d'accueil du premier lancement, qui demande l'accès aux fichiers. */
     private var showWelcome by mutableStateOf(false)
 
+    /** Écran « Votre TV » (Android 32 ou 64 bits), montré une fois après l'accueil, y compris après une mise à jour. */
+    private var showTvInfo by mutableStateOf(false)
+
     private val bluetoothRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         model.gamepads.permissionResult(granted)
     }
@@ -43,6 +48,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         storageOk = StorageAccess.granted(this)
         showWelcome = !storageOk && !model.store.welcomeDone
+        showTvInfo = !model.store.tvInfoShown
 
         setContent {
             RetroSalonTheme {
@@ -58,14 +64,19 @@ class MainActivity : ComponentActivity() {
                     model.store.welcomeDone = true
                     showWelcome = false
                 }
+                val finishTvInfo = {
+                    model.store.tvInfoShown = true
+                    showTvInfo = false
+                }
 
                 LaunchedEffect(Unit) {
                     if (model.sources.isNotEmpty()) model.rescan()
                 }
 
-                BackHandler(enabled = showWelcome || screen != "home" || model.launch != null) {
+                BackHandler(enabled = showWelcome || showTvInfo || screen != "home" || model.launch != null) {
                     when {
                         showWelcome -> finishWelcome()
+                        showTvInfo -> finishTvInfo()
                         model.launch != null -> model.dismissLaunch()
                         screen == "home" -> Unit
                         screen == "settings" -> screen = "home"
@@ -82,6 +93,8 @@ class MainActivity : ComponentActivity() {
                         },
                         onLater = finishWelcome,
                     )
+                } else if (showTvInfo) {
+                    TvInfoScreen(remember { TvArch.current() }, onDone = finishTvInfo)
                 } else Box(Modifier.fillMaxSize()) {
                     when (screen) {
                         "home" -> HomeScreen(

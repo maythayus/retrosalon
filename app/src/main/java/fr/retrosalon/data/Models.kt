@@ -107,6 +107,11 @@ class Store(private val context: Context) {
         get() = prefs.getBoolean("welcomeDone", false)
         set(value) = prefs.edit().putBoolean("welcomeDone", value).apply()
 
+    /** Vrai une fois l'écran « Votre TV » (Android 32 ou 64 bits) vu, au premier lancement ou après une mise à jour. */
+    var tvInfoShown: Boolean
+        get() = prefs.getBoolean("tvInfoShown", false)
+        set(value) = prefs.edit().putBoolean("tvInfoShown", value).apply()
+
     fun launcherFor(systemId: String): String? = prefs.getString("emu:$systemId", null)
     fun setLauncherFor(systemId: String, launcherId: String) =
         prefs.edit().putString("emu:$systemId", launcherId).apply()

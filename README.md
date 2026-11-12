@@ -11,7 +11,7 @@ RetroSalon puts all your retro games in a single library on the TV, from the NES
 
 | | |
 |---|---|
-| Version | 0.2.2 |
+| Version | 0.2.3 |
 | Minimum Android | **Android 8.0 (API 26)** |
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV (also works on phones and tablets in landscape) |
@@ -114,17 +114,27 @@ RetroSalon itself needs **Android 8.0**. A console therefore needs whichever is 
 
 | Emulator | Minimum Android | Notes |
 |---|---|---|
-| RetroArch | 4.1 (F-Droid build) | Play Store build needs a newer Android. The SwanStation core is 64-bit (arm64) only. |
+| RetroArch | 4.1 (F-Droid build) | Play Store build needs a newer Android. On a 32-bit TV, take the “32bit” download from retroarch.com. |
 | PPSSPP | 2.3 (`minSdk 9`, build 1.19.3) | Checked on the installed 1.19.3 F-Droid build. A third-party mirror lists Android 10 for 1.20.x (not verified). |
 | Dolphin | 7.0 (API 24) | 64-bit devices only, OpenGL ES 3.0 or Vulkan. |
 | melonDS | 7.0 (API 24) | OpenGL ES 3.0. |
 | Azahar | **10 (API 29)** | Android 9 users must stay on Azahar 2123.4.1 or older. |
 | Eden | **10 (API 29)**, "legacy" APK | Main APK needs Android 13 (API 33). Vulkan 1.1 required. |
 | NetherSX2 | 8.0 | 64-bit (arm64) only. |
-| DuckStation | not verified | Historically Android 7+, arm64. |
+| DuckStation | not verified | Play Store build supports 32-bit (armv7) and 64-bit ARM. |
 | M64Plus FZ, DraStic, ePSXe, Flycast, Redream, Yaba Sanshiro 2, ARMSX2, MAME4droid | not verified | No reliable figure found. |
 
 When an emulator needs a newer Android than the TV has, *Settings → Choose emulators* shows **"Requires Android X"** on it.
+
+### 32-bit and 64-bit TVs
+
+RetroSalon itself runs on both: the same APK works on 32-bit and 64-bit ARM, and on x86 and x86_64. Some TV boxes run a 32-bit Android even with a 64-bit processor, for example the Freebox Pop player.
+
+Some emulators are **64-bit only** and won't install on a 32-bit TV: Dolphin, Azahar, NetherSX2, ARMSX2, Eden and the current MAME4droid (2024 version). On a 32-bit TV, use the other emulators in each console's list: for example the 32-bit RetroArch build from retroarch.com (its SwanStation core, DuckStation or ePSXe for the PlayStation), and the older MAME4droid 0.139u1 for arcade games, which needs games in the MAME 0.139 format.
+
+An x86_64 TV that can't run 64-bit ARM apps can't install NetherSX2, ARMSX2 or MAME4droid 2024 either, as they only exist for ARM; for Eden, take its ChromeOS version.
+
+RetroSalon tells you which one your TV runs on first launch and in *Settings → Emulators*. From a computer, you can also run `adb shell getprop ro.product.cpu.abilist`: if the list contains `arm64-v8a` or `x86_64`, the TV runs a 64-bit Android.
 
 ---
 
@@ -189,6 +199,8 @@ On first launch, RetroSalon shows a welcome screen that explains what it needs, 
 
 Without this access, RetroSalon can't read games on the TV or a USB drive, or write the cache. *Later* skips the step; a reminder then stays on the home screen and in *Settings*.
 
+RetroSalon then shows **Your TV** once: whether the TV runs a 32-bit or 64-bit Android, on an ARM or x86 processor, and which emulators can't be installed on it (see [32-bit and 64-bit TVs](#32-bit-and-64-bit-tvs)). It also appears once after updating from an older version. The same information stays in *Settings → Emulators*.
+
 **Nearby devices** (optional, Android 12 and newer) is asked only when you press *Show the controller battery* in *Settings*; the button appears while a connected controller shows no battery level. RetroSalon uses it to read the battery level of Bluetooth controllers such as the Xbox Nano. If you refuse, everything else works the same, without the level. The button then becomes *Open in the TV settings*, where you can allow it later: *Apps → RetroSalon → Permissions*.
 
 Some Android TV models don't have the *All files access* screen. In that case, grant it from a computer with `adb` (USB or network debugging enabled on the TV):
@@ -215,9 +227,9 @@ RetroSalon passes the game to each emulator the way that emulator expects. The *
 
 ## Installing
 
-1. Download `RetroSalon-0.2.2.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest).
+1. Download `RetroSalon-0.2.3.apk` from the [latest release](https://github.com/maythayus/retrosalon/releases/latest). There is one APK for every TV: it runs on 32-bit and 64-bit Android, ARM or x86.
 2. Install it on the TV. Choose one:
-   - over the network with `adb install RetroSalon-0.2.2.apk`;
+   - over the network with `adb install RetroSalon-0.2.3.apk`;
    - with an app such as *Downloader*;
    - from a USB stick with a file manager.
 

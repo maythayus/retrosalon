@@ -40,6 +40,7 @@ import fr.retrosalon.AppModel
 import fr.retrosalon.Gamepads
 import fr.retrosalon.R
 import fr.retrosalon.StorageAccess
+import fr.retrosalon.TvArch
 import fr.retrosalon.formatBytes
 import fr.retrosalon.data.Launch
 import fr.retrosalon.data.Source
@@ -203,8 +204,11 @@ fun SettingsScreen(
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
+                val arch = remember { TvArch.current() }
                 SectionTitle(stringResource(R.string.settings_emulators_title))
                 Muted(stringResource(R.string.settings_emulators_help))
+                Text(tvArchSummary(arch), style = MaterialTheme.typography.titleSmall)
+                TvArchAdvice(arch)
                 ActionButton(stringResource(R.string.settings_emulators_choose), onClick = onEmulators)
             }
         }
