@@ -4,7 +4,7 @@ RetroSalon includes or adapts the third-party material below. This file is shipp
 (`assets/THIRD_PARTY_NOTICES.md`) and attached to each GitHub release.
 
 Since version 0.3.0, RetroSalon also contains RetroArch and libretro cores: see
-[RetroArch and libretro cores](#retroarch-and-libretro-cores-built-in-retroarch-build).
+[RetroArch and libretro cores](#retroarch-and-libretro-cores).
 
 ## Adapted material
 
@@ -32,7 +32,7 @@ Since version 0.3.0, RetroSalon also contains RetroArch and libretro cores: see
 
 None of these libraries ships a NOTICE file.
 
-## RetroArch and libretro cores (built-in RetroArch build)
+## RetroArch and libretro cores
 
 The RetroSalon APKs, from version 0.3.0, contain RetroArch and the libretro cores below. `retroarch/fetch.py`, run before the build, downloads them from libretro's official sources
 (buildbot.libretro.com and libretro's repositories on GitHub); none of them is stored in this repository.
@@ -52,14 +52,14 @@ through the libretro API.
 | RetroArch files: menus, fonts, controller profiles, core information, filters | 1.22.2 | `assets/retroarch/ra-assets.zip` | The RetroArch team and the authors listed in `open-source-notices.info` | GPL-3.0; the fonts keep their own licences (M+ FONTS, OFL-1.1, Bitstream Vera, Apache-2.0) |
 | RetroArch menu sounds | 1.22.2 | `assets/retroarch/ra-assets.zip` (`assets/sounds`) | ViRiX Dreamcore | [CC BY-NC 3.0 US](https://creativecommons.org/licenses/by-nc/3.0/us/) (licence note: `assets/sounds/Licence.txt` in the zip) |
 | [PPSSPP](https://github.com/hrydgard/ppsspp) system files: font atlases, translations, shaders, sounds, the Roboto Condensed and Inconsolata fonts, and the PSP system fonts (`flash0/font/*.pgf`) as redistributed by the PPSSPP project | buildbot.libretro.com/assets/system/PPSSPP.zip | `assets/retroarch/ppsspp-system.zip` | PPSSPP project (see `PPSSPP/LICENSE.TXT` in the zip) | GPL-2.0 or later for PPSSPP's files; Roboto Condensed and Inconsolata: OFL-1.1; the PSP system fonts are not covered by PPSSPP's licence |
-| [Mesen](https://github.com/libretro/Mesen) | `0102910` (buildbot nightly of 2026-11-12) | `lib/<abi>/libmesen_libretro_android.so` | M. Bibaud (Sour) | GPL-3.0 |
+| [Mesen](https://github.com/libretro/Mesen) | buildbot nightly of 2026-11-12; source: `0102910`* | `lib/<abi>/libmesen_libretro_android.so` | M. Bibaud (Sour) | GPL-3.0 |
 | [FCEUmm](https://github.com/libretro/libretro-fceumm) | `e0f3086` (buildbot nightly of 2026-11-12) | `libfceumm_libretro_android.so` | FCEU Team, CaH4e3 | GPL-2.0 |
-| [Snes9x](https://github.com/libretro/snes9x) | 1.63 (`fae2fea`) | `libsnes9x_libretro_android.so` | Snes9x Team | Snes9x licence, **non-commercial** |
+| [Snes9x](https://github.com/libretro/snes9x) | 1.63 (`fae2fea`) | `libsnes9x_libretro_android.so` | Snes9x Team | Snes9x licence, **non-commercial**; its NTSC filter (snes_ntsc, Shay Green) is LGPL-2.1 or later |
 | [Mupen64Plus-Next](https://github.com/libretro/mupen64plus-libretro-nx) (GLES3) | `15bada8` | `libmupen64plus_next_gles3_libretro_android.so` | m4xw, Hacktarux, gonetz, GLideN64 contributors, Mupen64Plus Team | GPL-2.0 |
 | [Gambatte](https://github.com/libretro/gambatte-libretro) | `77f2567` | `libgambatte_libretro_android.so` | Sinamas | GPL-2.0 |
 | [mGBA](https://github.com/libretro/mgba) | 0.11-212 (`7a12d6d`) | `libmgba_libretro_android.so` | endrift | MPL-2.0 |
-| [melonDS DS](https://github.com/JesseTG/melonds-ds) | 1.4.0 (`f394adb`, buildbot nightly of 2026-11-12) | `libmelondsds_libretro_android.so` | Jesse Talavera, the melonDS team | GPL-3.0 or later |
-| [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) | 1.7.4 (`b9c2316`) | `libgenesis_plus_gx_libretro_android.so` | Charles MacDonald, Eke-Eke | Genesis Plus GX licence, **non-commercial** |
+| [melonDS DS](https://github.com/JesseTG/melonds-ds) | 1.4.0, buildbot nightly of 2026-11-12; source: `f394adb`* | `libmelondsds_libretro_android.so` | Jesse Talavera, the melonDS team | GPL-3.0 or later |
+| [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) | 1.7.4 (`b9c2316`) | `libgenesis_plus_gx_libretro_android.so` | Charles MacDonald, Eke-Eke | Genesis Plus GX licence, **non-commercial**; Nuked OPN2 (Alexey Khokholov), the NTSC filter and Blip Buffer (Shay Green) are LGPL-2.1 or later |
 | [YabaSanshiro](https://github.com/libretro/yabause) | 3.4.2 (`09ed8e5`) | `libyabasanshiro_libretro_android.so` | Guillaume Duhammel, Theo Berkau, Anders Montonen, devmiyax | GPL-2.0 |
 | [Flycast](https://github.com/flyinghead/flycast) | `72b8e67` (buildbot nightly of 2026-11-12) | `libflycast_libretro_android.so` | flyinghead | GPL-2.0 |
 | [PCSX ReARMed](https://github.com/libretro/pcsx_rearmed) | r26 (`7b0e8f8`) | `libpcsx_rearmed_libretro_android.so` | PCSX Team, notaz, Exophase | GPL-2.0 |
@@ -70,9 +70,9 @@ through the libretro API.
 | [Stella](https://github.com/stella-emu/stella) | `da5a002` | `libstella_libretro_android.so` | Stephen Anthony, Bradford Mott, Eckhard Stolberg, Brian Watson | GPL-2.0 |
 
 The versions in brackets are the source revisions the core binaries report. The Mesen, melonDS DS and FinalBurn Neo
-binaries report none: they are libretro's nightly builds of 2026-11-12. For Mesen and melonDS DS, the revision above
-is the latest commit of the repository's main branch on that day (from 2026-04-20 and 2026-09-27); nothing was
-committed between it and the build. `fetch.py` writes `VERSIONS.txt` (in the APK:
+binaries report none: they are libretro's nightly builds of 2026-11-12. \* For Mesen and melonDS DS, the source
+revision given is not reported by the binary: it is the latest commit of the repository's main branch on that day
+(from 2026-04-20 and 2026-09-27), and nothing was committed between it and the build. `fetch.py` writes `VERSIONS.txt` (in the APK:
 `assets/retroarch/VERSIONS.txt`), which gives the SHA-256 of every file it downloaded and the build date of each core.
 
 Licence texts shipped in each APK:
@@ -83,8 +83,11 @@ Licence texts shipped in each APK:
 - The Snes9x, Genesis Plus GX and FinalBurn Neo licences, with their copyright notices, which must accompany every
   copy of these cores: `assets/retroarch/licenses/snes9x.txt`, `genesis_plus_gx.txt` and `fbneo.txt` in the APK.
   `fetch.py` takes them from each core's repository linked above (`LICENSE`, `LICENSE.txt` and `src/license.txt`, on
-  the `master` branch), so they are not stored in this repository.
-- CC BY-NC 3.0 US, for the menu sounds: <https://creativecommons.org/licenses/by-nc/3.0/us/legalcode>.
+  the `master` branch), so they are not stored in this repository. `genesis_plus_gx.txt` also contains the full
+  text of the GNU LGPL version 2.1, which covers the LGPL parts of Genesis Plus GX and Snes9x.
+
+The licence of the menu sounds, CC BY-NC 3.0 US, is given by its address, as that licence allows:
+<https://creativecommons.org/licenses/by-nc/3.0/us/legalcode>.
 
 ### Non-commercial components
 
@@ -105,8 +108,9 @@ November 2026.
 
 ### Source code
 
-Each GitHub release of RetroSalon, from 0.3.0, comes with the complete corresponding source code of RetroArch and of
-every GPL or MPL core in its APKs (GPL-3.0 section 6, GPL-2.0 section 3, MPL-2.0 section 3.2):
+Each GitHub release of RetroSalon, from 0.3.0, comes with the complete corresponding source code of RetroArch, of
+every GPL or MPL core in its APKs, and of Snes9x and Genesis Plus GX for their LGPL parts (GPL-3.0 section 6,
+GPL-2.0 section 3, LGPL-2.1 sections 4 and 6, MPL-2.0 section 3.2):
 <https://github.com/maythayus/retrosalon/releases>. Next to the APKs, each `<name>-<commit>-source.tar.xz` holds
 one component at the revision listed above, with its git submodules and, for melonDS DS, the dependencies its
 build fetches, each at the commit the build used. `SOURCES.txt` at the top of each archive lists every repository
@@ -116,8 +120,11 @@ and commit in it.
   release's tag (for example `v0.3.0`).
 - RetroArch 1.22.2: `RetroArch-1.22.2-69a4f0e-source.tar.xz`, also at
   <https://github.com/libretro/RetroArch/tree/v1.22.2>.
-- Each GPL or MPL core: its archive in the release, also in its repository in the table above, at the revision
-  listed.
+- Each GPL or MPL core, Snes9x and Genesis Plus GX: its archive in the release, also in its repository in the table
+  above, at the revision listed. The archives of Snes9x and Genesis Plus GX stay under their non-commercial
+  licences, except the LGPL files in them.
+- FinalBurn Neo: its licence does not require the source to be offered, and its binary reports no revision; its
+  source is in its repository linked above.
 
 If you redistribute a RetroSalon APK, pass on these archives with it, or the link to the release they come from.
 An APK you build yourself contains the nightly cores of the day you first ran `fetch.py` (see its `VERSIONS.txt`):
