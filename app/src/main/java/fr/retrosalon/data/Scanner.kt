@@ -24,7 +24,12 @@ object Scanner {
     }
 
     private fun collect(fs: SourceFs, sourceId: String, system: GameSystem, folder: String, sub: String = "", depth: Int = 0): List<Game> {
-        val entries = runCatching { fs.list(join(folder, sub)) }.getOrElse { return emptyList() }
+        val entries = runCatching { fs.list(join(folder, sub)) }.getOrElse {
+            // Coupure ou serveur trop lent : la suite de la source ne serait pas lisible non plus. Le scan de
+            // cette source échoue, et ses jeux de la liste précédente sont gardés (au lieu d'être perdus).
+            if (SmbFs.isNetworkGlitch(it)) throw it
+            return emptyList()
+        }
         val files = entries.filter { !it.isDir && ext(it.name) in system.extensions }
         val hidden = hiddenCompanions(system, files)
         val games = files.filter { it.name !in hidden }.map {

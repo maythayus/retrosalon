@@ -17,7 +17,7 @@ import java.io.File
 
 object Launch {
 
-    fun isInstalled(context: Context, pkg: String): Boolean = try {
+    fun isInstalled(context: Context, pkg: String): Boolean = if (pkg == EmbeddedRetroArch.SELF) true else try {
         if (Build.VERSION.SDK_INT >= 33) {
             context.packageManager.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(0))
         } else {
@@ -29,7 +29,18 @@ object Launch {
         false
     }
 
-    fun isInstalled(context: Context, launcher: Launcher) = launcher.components.any { isInstalled(context, it.first) }
+    fun isInstalled(context: Context, launcher: Launcher) = launcher.components.any { available(context, launcher, it.first) }
+
+    /** Vrai si le jeu sera ouvert par le RetroArch intégré à RetroSalon. */
+    fun usesEmbedded(context: Context, launcher: Launcher) =
+        launcher.components.firstOrNull { available(context, launcher, it.first) }?.first == EmbeddedRetroArch.SELF
+
+    /** Le RetroArch intégré ne compte que s'il contient le cœur de ce lanceur. */
+    private fun available(context: Context, launcher: Launcher, pkg: String): Boolean {
+        if (pkg != EmbeddedRetroArch.SELF) return isInstalled(context, pkg)
+        val core = launcher.extras.firstNotNullOfOrNull { (it.second as? Arg.RaCore)?.core } ?: return false
+        return EmbeddedRetroArch.hasCore(context, core)
+    }
 
     /** L'émulateur choisi pour la console s'il est installé, sinon le premier installé de la liste. */
     fun pick(context: Context, store: Store, system: GameSystem): Launcher? {
@@ -39,8 +50,8 @@ object Launch {
     }
 
     /** Lance le jeu. Renvoie un message d'erreur, ou null si l'émulateur a démarré. */
-    fun start(context: Context, launcher: Launcher, prepared: Prepared): String? {
-        val candidates = launcher.components.filter { isInstalled(context, it.first) }
+    suspend fun start(context: Context, launcher: Launcher, prepared: Prepared): String? {
+        val candidates = launcher.components.filter { available(context, launcher, it.first) }
         if (candidates.isEmpty()) return context.getString(R.string.launch_not_installed, launcher.label)
         // MAME reçoit les dossiers entre apostrophes : une apostrophe dans un nom casserait la commande.
         val usesRomPath = launcher.extras.any { it.second == Arg.MameRomPath }
@@ -50,7 +61,7 @@ object Launch {
         for ((pkg, cls) in candidates) {
             val intent = buildIntent(context, launcher, pkg, cls, prepared)
             try {
-                context.startActivity(intent)
+                if (pkg == EmbeddedRetroArch.SELF) EmbeddedRetroArch.start(context, intent) else context.startActivity(intent)
                 return null
             } catch (_: ActivityNotFoundException) {
                 continue
@@ -71,8 +82,9 @@ object Launch {
         }
         val romString = if (launcher.uriMode == UriMode.PATH) file.absolutePath else romUri.toString()
 
+        val embedded = pkg == EmbeddedRetroArch.SELF
         val intent = Intent()
-        intent.component = ComponentName(pkg, cls)
+        if (embedded) EmbeddedRetroArch.fillIntent(context, intent) else intent.component = ComponentName(pkg, cls)
         launcher.action?.let { intent.action = it }
         launcher.category?.let { intent.addCategory(it) }
         if (launcher.dataRom) intent.data = romUri
@@ -82,8 +94,16 @@ object Launch {
                 Arg.RomPath -> intent.putExtra(key, file.absolutePath)
                 is Arg.Str -> intent.putExtra(key, arg.value)
                 is Arg.Bool -> intent.putExtra(key, arg.value)
-                is Arg.RaCore -> intent.putExtra(key, "/data/user/$userId/$pkg/cores/${arg.core}_libretro_android.so")
-                Arg.RaConfig -> intent.putExtra(key, "/storage/emulated/$userId/Android/data/$pkg/files/retroarch.cfg")
+                is Arg.RaCore -> intent.putExtra(
+                    key,
+                    if (embedded) EmbeddedRetroArch.corePath(context, arg.core)
+                    else "/data/user/$userId/$pkg/cores/${arg.core}_libretro_android.so",
+                )
+                Arg.RaConfig -> intent.putExtra(
+                    key,
+                    if (embedded) EmbeddedRetroArch.configPath(context)
+                    else "/storage/emulated/$userId/Android/data/$pkg/files/retroarch.cfg",
+                )
                 Arg.MameRomPath -> intent.putExtra(key, "-rompath '${file.parent};${prepared.systemDir.absolutePath}'")
             }
         }

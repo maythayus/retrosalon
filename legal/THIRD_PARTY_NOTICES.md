@@ -3,11 +3,15 @@
 RetroSalon includes or adapts the third-party material below. This file is shipped inside the APK
 (`assets/THIRD_PARTY_NOTICES.md`) and attached to each GitHub release.
 
+The build with RetroArch built in (branch `retrosalon/retroarch-integre`, APKs whose version name contains `-perso`)
+also contains RetroArch and libretro cores: see [RetroArch and libretro cores](#retroarch-and-libretro-cores-built-in-retroarch-build).
+
 ## Adapted material
 
 | Material | Where it is used | Licence |
 |---|---|---|
 | ES-DE (EmulationStation Desktop Edition): Android emulator launch configuration (`es_find_rules.xml`, `es_systems.xml`): package and activity names, intent actions and extras | `app/src/main/java/fr/retrosalon/data/Catalog.kt` | MIT, see [ES-DE](#es-de) |
+| RetroArch 1.22.2: names of the intent extras, activities and manifest entries that RetroArch's Android code expects (`MainMenuActivity.java`, `RetroActivityFuture.java`, `pkg/android/phoenix/AndroidManifest.xml`). Interface only: no RetroArch code is copied into these files. | `app/src/main/java/fr/retrosalon/data/EmbeddedRetroArch.kt`, `retroarch/src/main/AndroidManifest.xml` | RetroArch is GPL-3.0 |
 
 ## Libraries bundled in the APK
 
@@ -27,6 +31,97 @@ RetroSalon includes or adapts the third-party material below. This file is shipp
 | [JSpecify](https://jspecify.dev) | 1.0.0 | Copyright The JSpecify Authors | Apache 2.0 |
 
 None of these libraries ships a NOTICE file.
+
+## RetroArch and libretro cores (built-in RetroArch build)
+
+The APKs whose version name contains `-perso`, built from the branch `retrosalon/retroarch-integre`, contain RetroArch
+and the libretro cores below. `retroarch/fetch.py`, run before the build, downloads them from libretro's official sources
+(buildbot.libretro.com and libretro's repositories on GitHub); none of them is stored in this repository.
+
+RetroArch's Android Java code is compiled into the same APK as RetroSalon, so the program formed by RetroSalon and
+RetroArch (its Java code and native engine) is distributed under the GNU General Public License version 3 (full text:
+[licenses/GPL-3.0.txt](licenses/GPL-3.0.txt)). RetroSalon's own source code stays under the MIT licence, which allows
+this combination. The libretro cores, the menu sounds and the PPSSPP files below are not covered by that licence: each
+keeps its own. Like libretro, this project treats each core as a separate program, loaded by RetroArch at run time
+through the libretro API.
+
+| Component | Version | In the APK | Authors | Licence |
+|---|---|---|---|---|
+| [RetroArch](https://github.com/libretro/RetroArch), Android Java code (RetroActivityCommon, RetroActivityCamera, RetroActivityIntent, RetroActivityFuture, MainMenuActivity, ConfigFile, UserPreferences, PlayCoreManager) | 1.22.2 (tag `v1.22.2`), unmodified | `classes*.dex` (`com.retroarch.*`) | The RetroArch team | GPL-3.0 |
+| libretro-common `VfsImplementationSaf.java` | 1.22.2 (tag `v1.22.2`), unmodified | `classes*.dex` (`com.libretro.common.vfs`) | Copyright (C) 2010-2020 The RetroArch team | MIT, see [libretro-common](#libretro-common) |
+| RetroArch native engine | 1.22.2, from the official APKs on buildbot.libretro.com/stable | `lib/<abi>/libretroarch-activity.so` | The RetroArch team | GPL-3.0. RetroArch's own third-party notices are in `info/open-source-notices.info` inside `assets/retroarch/ra-assets.zip` |
+| RetroArch files: menus, fonts, controller profiles, core information, filters | 1.22.2 | `assets/retroarch/ra-assets.zip` | The RetroArch team and the authors listed in `open-source-notices.info` | GPL-3.0; the fonts keep their own licences (M+ FONTS, OFL-1.1, Bitstream Vera, Apache-2.0) |
+| RetroArch menu sounds | 1.22.2 | `assets/retroarch/ra-assets.zip` (`assets/sounds`) | ViRiX Dreamcore | [CC BY-NC 3.0 US](https://creativecommons.org/licenses/by-nc/3.0/us/) (licence note: `assets/sounds/Licence.txt` in the zip) |
+| [PPSSPP](https://github.com/hrydgard/ppsspp) system files: font atlases, translations, shaders, sounds, the Roboto Condensed and Inconsolata fonts, and the PSP system fonts (`flash0/font/*.pgf`) as redistributed by the PPSSPP project | buildbot.libretro.com/assets/system/PPSSPP.zip | `assets/retroarch/ppsspp-system.zip` | PPSSPP project (see `PPSSPP/LICENSE.TXT` in the zip) | GPL-2.0 or later for PPSSPP's files; Roboto Condensed and Inconsolata: OFL-1.1; the PSP system fonts are not covered by PPSSPP's licence |
+| [Mesen](https://github.com/libretro/Mesen) | buildbot nightly of 2026-11-12 (no revision reported) | `lib/<abi>/libmesen_libretro_android.so` | M. Bibaud (Sour) | GPL-3.0 |
+| [FCEUmm](https://github.com/libretro/libretro-fceumm) | `e0f3086` (buildbot nightly of 2026-11-12) | `libfceumm_libretro_android.so` | FCEU Team, CaH4e3 | GPL-2.0 |
+| [Snes9x](https://github.com/libretro/snes9x) | 1.63 (`fae2fea`) | `libsnes9x_libretro_android.so` | Snes9x Team | Snes9x licence, **non-commercial** |
+| [Mupen64Plus-Next](https://github.com/libretro/mupen64plus-libretro-nx) (GLES3) | `15bada8` | `libmupen64plus_next_gles3_libretro_android.so` | m4xw, Hacktarux, gonetz, GLideN64 contributors, Mupen64Plus Team | GPL-2.0 |
+| [Gambatte](https://github.com/libretro/gambatte-libretro) | `77f2567` | `libgambatte_libretro_android.so` | Sinamas | GPL-2.0 |
+| [mGBA](https://github.com/libretro/mgba) | 0.11-212 (`7a12d6d`) | `libmgba_libretro_android.so` | endrift | MPL-2.0 |
+| [melonDS DS](https://github.com/JesseTG/melonds-ds) | buildbot nightly of 2026-11-12 (no revision reported) | `libmelondsds_libretro_android.so` | Jesse Talavera, the melonDS team | GPL-3.0 or later |
+| [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) | 1.7.4 (`b9c2316`) | `libgenesis_plus_gx_libretro_android.so` | Charles MacDonald, Eke-Eke | Genesis Plus GX licence, **non-commercial** |
+| [YabaSanshiro](https://github.com/libretro/yabause) | 3.4.2 (`09ed8e5`) | `libyabasanshiro_libretro_android.so` | Guillaume Duhammel, Theo Berkau, Anders Montonen, devmiyax | GPL-2.0 |
+| [Flycast](https://github.com/flyinghead/flycast) | `72b8e67` (buildbot nightly of 2026-11-12) | `libflycast_libretro_android.so` | flyinghead | GPL-2.0 |
+| [PCSX ReARMed](https://github.com/libretro/pcsx_rearmed) | r26 (`7b0e8f8`) | `libpcsx_rearmed_libretro_android.so` | PCSX Team, notaz, Exophase | GPL-2.0 |
+| [SwanStation](https://github.com/libretro/swanstation) | 1.0.0 (`631f0fb`) | `libswanstation_libretro_android.so` | stenzek | GPL-3.0 |
+| [PPSSPP](https://github.com/hrydgard/ppsspp) (core) | `55d8795` (buildbot nightly of 2026-11-10) | `libppsspp_libretro_android.so` | Henrik Rydgård | GPL-2.0 or later |
+| [Beetle PCE Fast](https://github.com/libretro/beetle-pce-fast-libretro) | 1.31.0.0 (`2de1ce1`) | `libmednafen_pce_fast_libretro_android.so` | Mednafen Team | GPL-2.0 |
+| [FinalBurn Neo](https://github.com/libretro/FBNeo) | buildbot nightly of 2026-11-12 (no revision reported) | `libfbneo_libretro_android.so` | Team FBNeo | FBNeo licence, **non-commercial** |
+| [Stella](https://github.com/stella-emu/stella) | `da5a002` | `libstella_libretro_android.so` | Stephen Anthony, Bradford Mott, Eckhard Stolberg, Brian Watson | GPL-2.0 |
+
+The versions in brackets are the source revisions the core binaries report. The Mesen, melonDS DS and FinalBurn Neo
+binaries report none: they are libretro's nightly builds of 2026-11-12, and anyone who redistributes them must find
+the exact commit libretro built before offering the source. `fetch.py` writes `VERSIONS.txt` (in the APK:
+`assets/retroarch/VERSIONS.txt`), which gives the SHA-256 of every file it downloaded and the build date of each core.
+
+Licence texts shipped in each `-perso` APK:
+
+- GPL-3.0, GPL-2.0, MPL-2.0 and OFL-1.1 (fonts): [licenses/GPL-3.0.txt](licenses/GPL-3.0.txt),
+  [licenses/GPL-2.0.txt](licenses/GPL-2.0.txt), [licenses/MPL-2.0.txt](licenses/MPL-2.0.txt) and
+  [licenses/OFL-1.1.txt](licenses/OFL-1.1.txt) (`assets/licenses/` in the APK).
+- The Snes9x, Genesis Plus GX and FinalBurn Neo licences, with their copyright notices, which must accompany every
+  copy of these cores: `assets/retroarch/licenses/snes9x.txt`, `genesis_plus_gx.txt` and `fbneo.txt` in the APK.
+  `fetch.py` takes them from each core's repository linked above (`LICENSE`, `LICENSE.txt` and `src/license.txt`, on
+  the `master` branch), so they are not stored in this repository.
+- CC BY-NC 3.0 US, for the menu sounds: <https://creativecommons.org/licenses/by-nc/3.0/us/legalcode>.
+
+### Non-commercial components
+
+Snes9x, Genesis Plus GX, FinalBurn Neo and RetroArch's menu sounds may only be used and redistributed for
+non-commercial purposes. A `-perso` APK must therefore be given away free of charge. It must not be sold, bundled
+with a paid product or device, offered behind a paywall or in exchange for a donation, or distributed from a page or
+an app that shows advertising. Anyone who redistributes it must keep these conditions.
+
+### Changes to RetroArch
+
+The RetroArch Java files listed above are unmodified from tag `v1.22.2`. RetroSalon builds them with its own Gradle
+module and Android manifest (`retroarch/build.gradle.kts`, `retroarch/src/main/AndroidManifest.xml`): RetroArch runs in
+its own `:retroarch` process, is not exported and has no launcher icon. When it starts a game or the menu, RetroSalon
+writes some of RetroArch's settings (`EmbeddedRetroArch.kt`: core folder, core downloader hidden, menu driver,
+menu buttons, controller defaults and player reservations), closes RetroArch when it leaves the screen, and changes
+the device model name that RetroArch reads (`libretrosalon-getprop.so`). Changes by the RetroSalon author,
+November 2026.
+
+### Source code
+
+- RetroSalon, including `retroarch/fetch.py` and the Gradle build that produce the `-perso` APKs: this repository,
+  branch `retrosalon/retroarch-integre`, at the commit the APK was built from. Build an APK you share only from a
+  committed tree.
+- RetroArch 1.22.2: <https://github.com/libretro/RetroArch/tree/v1.22.2>.
+- Each core: its repository in the table above, at the revision listed (for Mesen, melonDS DS and FinalBurn Neo, the
+  commit libretro built on 2026-11-12).
+
+This project does not publish `-perso` APKs. If you distribute one, you must also offer the complete corresponding
+source code of RetroArch and of every GPL or MPL core it contains, at the exact revisions it was built from
+(GPL-3.0 section 6, GPL-2.0 section 3, MPL-2.0 section 3.2).
+
+### Trademarks
+
+RetroArch and libretro are trademarks of the libretro team. Nintendo, Sega, Sony, PlayStation, NEC, SNK, Atari,
+Xbox and the console names are trademarks of their owners. RetroSalon is not affiliated with or endorsed by the
+libretro team, the authors of any emulator or core, Microsoft, or any console maker. RetroSalon names RetroArch only
+to identify it.
 
 ---
 
@@ -303,4 +398,31 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+## libretro-common
+
+`VfsImplementationSaf.java`, from RetroArch's `libretro-common`:
+
+```text
+Copyright  (C) 2010-2020 The RetroArch team
+
+---------------------------------------------------------------------------------------
+The following license statement only applies to this file (VfsImplementationSaf.java).
+---------------------------------------------------------------------------------------
+
+Permission is hereby granted, free of charge,
+to any person obtaining a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```

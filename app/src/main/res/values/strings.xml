@@ -31,6 +31,7 @@
     <string name="emulators_none_installed">No emulator installed for this console</string>
     <string name="emulators_provider_auto">Access is granted automatically at launch.</string>
     <string name="emulators_retroarch_core">In RetroArch: Main Menu → Online Updater → Core Downloader → “%1$s”.</string>
+    <string name="emulators_retroarch_embedded">Core built into RetroSalon: nothing to download.</string>
     <string name="emulators_saf_folder">Folder to allow in %1$s</string>
     <string name="emulators_status_in_use">In use</string>
     <string name="emulators_status_installed">Installed</string>
@@ -39,6 +40,8 @@
     <string name="emulators_title">Emulators per console</string>
     <string name="err_cannot_write">Couldn’t write %1$s</string>
     <string name="err_copy_changed">%1$s changed on the server during the copy. Try again.</string>
+    <string name="err_server_timeout">%1$s is not answering (timed out). Check that the server is on and that the TV is connected to the network, then try again.</string>
+    <string name="err_server_connection_lost">The connection to %1$s was lost. Check the network, then try again.</string>
     <string name="err_file_name_refused">File name rejected because it points outside the game folder: %1$s</string>
     <string name="err_file_not_found">File not found: %1$s. Run “Refresh”.</string>
     <string name="err_folder_unreadable">Unreadable folder: %1$s</string>
@@ -69,6 +72,7 @@
     <string name="main_storage_screen_unavailable">Screen not available on this TV: see Settings for the adb command.</string>
     <string name="model_launch_copy_progress">Copying: %1$s / %2$s</string>
     <string name="model_launch_copying_from">Copying from %1$s…</string>
+    <string name="model_launch_retrying">Connection problem with %1$s, trying again (%2$d of %3$d)…</string>
     <string name="model_launch_no_emulator">No %1$s emulator is installed. Install %2$s.</string>
     <string name="model_launch_or">%1$s or %2$s</string>
     <string name="model_launch_prepare_failed">Couldn’t prepare the game: %1$s</string>
@@ -110,6 +114,12 @@
     <string name="settings_emulators_choose">Choose emulators</string>
     <string name="settings_emulators_help">Choose the emulator for each console and see what is left to set up.</string>
     <string name="settings_emulators_title">Emulators</string>
+    <string name="settings_retroarch_bios">BIOS files from your own consoles go in this folder (PlayStation: optional with PCSX ReARMed):</string>
+    <string name="settings_retroarch_embedded">RetroArch %1$s built in · %2$d cores</string>
+    <string name="settings_retroarch_help">Consoles that use RetroArch start with the RetroArch built into RetroSalon: nothing to install. During a game, open RetroArch’s menu with Back on the remote, or Menu + View (Start + Select) on the controller.</string>
+    <string name="settings_retroarch_legal">RetroSalon © 2026 maythayus. RetroArch © the RetroArch team (libretro). Each core © its own authors. RetroSalon with RetroArch is free software under the GNU GPL version 3: you may redistribute it under that licence. It comes with NO WARRANTY. The cores and some files keep their own licences, some of them non-commercial. Licence texts are inside this app (assets/THIRD_PARTY_NOTICES.md and assets/licenses/) and at github.com/maythayus/retrosalon, branch retrosalon/retroarch-integre, which also says where to find the source code of RetroArch and of each core.</string>
+    <string name="settings_retroarch_open">Open RetroArch</string>
+    <string name="settings_retroarch_open_failed">Couldn’t open RetroArch: %1$s</string>
     <string name="settings_source_local">Local folder · %1$s</string>
     <string name="settings_source_remove">Remove</string>
     <string name="settings_source_smb">SMB server · %1$s</string>
@@ -134,7 +144,7 @@
     <string name="tvinfo_later">You can find this again in Settings → Emulators.</string>
     <string name="tvinfo_ok">Got it</string>
     <string name="tvinfo_summary">Android %1$s · %2$s · %3$s</string>
-    <string name="tvinfo_tips_32">Take the “32bit” download of RetroArch on retroarch.com. For the PlayStation: RetroArch’s SwanStation core, DuckStation or ePSXe. For MAME4droid: version 0.139u1, which needs games in the MAME 0.139 format.</string>
+    <string name="tvinfo_tips_32">RetroArch is built into RetroSalon, with its cores: nothing to install. For the PlayStation: the built-in PCSX ReARMed and SwanStation cores, DuckStation or ePSXe. For MAME4droid: version 0.139u1, which needs games in the MAME 0.139 format.</string>
     <string name="tvinfo_title">Your TV</string>
     <string name="tvinfo_x86">With an x86 processor, take the x86 version of each emulator when there is one.</string>
     <string name="welcome_allow_access">Allow access</string>

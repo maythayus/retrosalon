@@ -1,0 +1,13 @@
+#!/system/bin/sh
+# RetroSalon : la commande « getprop » telle que la voit le RetroArch intégré (voir
+# EmbeddedRetroArch.setUpProcess). Une bibliothèque de l'APK, pour qu'Android accepte de l'exécuter ;
+# même fichier pour toutes les architectures.
+#
+# RetroArch lit le modèle de l'appareil avec « getprop ro.product.model ». Si ce nom contient
+# « Play », il croit tourner sur une console Sony XPERIA Play et donne à toutes les manettes le
+# profil de cette console : le bouton A ne fait plus rien. La Freebox s'appelle « Freebox Player POP ».
+if [ "$1" = "ro.product.model" ]; then
+  /system/bin/getprop ro.product.model | /system/bin/sed 's/Play/play/g'
+else
+  exec /system/bin/getprop "$@"
+fi

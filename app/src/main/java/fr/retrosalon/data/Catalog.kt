@@ -69,8 +69,9 @@ data class GameSystem(
 private const val VIEW = "android.intent.action.VIEW"
 private const val MAIN = "android.intent.action.MAIN"
 
-private val RETROARCH = listOf("com.retroarch.aarch64", "com.retroarch", "com.retroarch.ra32")
-    .map { it to "com.retroarch.browser.retroactivity.RetroActivityFuture" }
+/** RetroArch intégré à RetroSalon d'abord (version perso), puis les applis RetroArch installées. */
+private val RETROARCH = listOf(EmbeddedRetroArch.SELF, "com.retroarch.aarch64", "com.retroarch", "com.retroarch.ra32")
+    .map { it to EmbeddedRetroArch.ACTIVITY }
 
 private fun ra(core: String, label: String) = Launcher(
     id = "ra:$core",
@@ -177,7 +178,7 @@ object Emulators {
 
     /** Tous les paquets connus (doit rester aligné avec <queries> du manifeste). */
     val allPackages: Set<String> by lazy {
-        Systems.all.flatMap { s -> s.launchers.flatMap { l -> l.components.map { it.first } } }.toSet()
+        Systems.all.flatMap { s -> s.launchers.flatMap { l -> l.components.map { it.first } } }.toSet() - EmbeddedRetroArch.SELF
     }
 }
 
@@ -198,7 +199,7 @@ object Systems {
         GameSystem("gba", "Game Boy Advance", setOf("gameboyadvance"), setOf("gba", "agb") + cartridge,
             listOf(ra("mgba", "mGBA"))),
         GameSystem("nds", "Nintendo DS", setOf("ds"), setOf("nds", "dsi") + cartridge,
-            listOf(Emulators.MELONDS, Emulators.DRASTIC)),
+            listOf(Emulators.MELONDS, Emulators.DRASTIC, ra("melondsds", "melonDS DS"))),
         GameSystem("n3ds", "Nintendo 3DS", setOf("3ds"), setOf("3ds", "cci", "cxi", "3dsx", "app", "zcci", "zcxi", "z3dsx"),
             listOf(Emulators.AZAHAR)),
         GameSystem("gc", "GameCube", setOf("gamecube", "ngc"), setOf("iso", "gcm", "gcz", "rvz", "ciso", "wbfs", "wia", "dol", "elf", "tgc", "m3u"),
@@ -216,15 +217,16 @@ object Systems {
         GameSystem("segacd", "Mega-CD", setOf("megacd"), setOf("chd", "cue", "iso", "m3u"),
             listOf(ra("genesis_plus_gx", "Genesis Plus GX")), disc = true),
         GameSystem("saturn", "Saturn", emptySet(), setOf("chd", "cue", "iso", "ccd", "mds", "m3u"),
-            listOf(Emulators.YABA), disc = true),
+            listOf(Emulators.YABA, ra("yabasanshiro", "YabaSanshiro")), disc = true),
         GameSystem("dreamcast", "Dreamcast", setOf("dc"), setOf("chd", "cdi", "gdi", "cue", "m3u"),
             listOf(Emulators.FLYCAST, Emulators.REDREAM, ra("flycast", "Flycast")), disc = true),
         GameSystem("psx", "PlayStation", setOf("ps1", "playstation"), setOf("chd", "cue", "pbp", "m3u", "iso", "img", "ccd", "ecm"),
-            listOf(Emulators.DUCKSTATION, ra("swanstation", "SwanStation"), Emulators.EPSXE), disc = true),
+            // PCSX ReARMed d'abord : il tourne sans BIOS (BIOS de remplacement intégré) et reste léger en 32 bits.
+            listOf(Emulators.DUCKSTATION, ra("pcsx_rearmed", "PCSX ReARMed"), ra("swanstation", "SwanStation"), Emulators.EPSXE), disc = true),
         GameSystem("ps2", "PlayStation 2", setOf("playstation2"), setOf("iso", "chd", "cso", "gz", "m3u"),
             listOf(Emulators.NETHERSX2, Emulators.ARMSX2), disc = true),
         GameSystem("psp", "PSP", emptySet(), setOf("iso", "cso", "pbp", "chd", "elf"),
-            listOf(Emulators.PPSSPP)),
+            listOf(Emulators.PPSSPP, ra("ppsspp", "PPSSPP"))),
         GameSystem("pcengine", "PC Engine", setOf("tg16", "turbografx16", "pce"), setOf("pce", "sgx", "cue", "chd", "ccd", "m3u") + cartridge,
             listOf(ra("mednafen_pce_fast", "Beetle PCE Fast")), disc = true),
         GameSystem("neogeo", "Neo Geo", emptySet(), cartridge,
