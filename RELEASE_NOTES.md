@@ -1,5 +1,35 @@
 # Release notes
 
+## RetroSalon 0.3.0 (2026-11-13)
+
+**RetroArch is now built into RetroSalon.** RetroArch 1.22.2 and 16 libretro cores are inside the APK, so the consoles that RetroArch runs play without installing anything else.
+
+- **Two APKs, one per processor.** `RetroSalon-0.3.0-32bit.apk` is for 32-bit ARM Android, such as the Freebox Player POP, and `RetroSalon-0.3.0-64bit.apk` for 64-bit ARM Android. Each has the RetroArch engine and cores for that Android. There is no x86 APK: on an x86 TV, stay on RetroSalon 0.2.3.
+- **The consoles that use RetroArch start in the built-in RetroArch**, unless you install an emulator that comes before it in that console's list. No RetroArch app and no core downloads are needed. The 16 cores are Mesen, FCEUmm, Snes9x, Mupen64Plus-Next, Gambatte, mGBA, melonDS DS, Genesis Plus GX, YabaSanshiro, Flycast, PCSX ReARMed, SwanStation, PPSSPP, Beetle PCE Fast, FinalBurn Neo and Stella. melonDS DS (Nintendo DS), YabaSanshiro (Saturn), PCSX ReARMed (PlayStation) and the PPSSPP core (PSP) are new in the emulator lists.
+- **Controllers.** Before each game, RetroSalon assigns the connected controllers to players 1 to 4 in the order they were connected, so the TV remote no longer takes player 1. The left stick works as the D-pad in games that don't use it, every controller can use RetroArch's menu, and Back or Start + Select opens it.
+- **Freebox Player POP.** The built-in RetroArch no longer mistakes the TV for a Sony XPERIA Play, where the controllers' A button did nothing.
+- **Home closes RetroArch,** so the next game always starts in a fresh RetroArch.
+- **Settings → Emulators** shows the built-in RetroArch, with an **Open RetroArch** button, the BIOS folder and the legal notices.
+- **Network games.** When the server stops answering in time (a disk going to sleep, weak Wi-Fi) or the connection drops, RetroSalon tries the copy up to 3 times and resumes where it stopped, unless the file changed on the server in between. It shows *Connection problem with …, trying again (2 of 3)…* meanwhile. A password refused after a drop is not retried. A drop while scanning a source keeps that source's games from the previous scan. The README explains how to share a Freebox's disk and turn off its sleep.
+
+**Licences and source code.** RetroSalon's own code stays under the MIT licence. Each APK, RetroSalon with RetroArch, is distributed under the GPL-3.0, and the cores keep their own licences. Snes9x, Genesis Plus GX and FinalBurn Neo may only be redistributed for non-commercial purposes, so the APKs must be given away free. The complete source code of RetroArch and of each GPL or MPL core is attached to this release. All licence texts are inside the APK and in [legal/](legal).
+
+**Requirements:** Android 8.0 (API 26) or newer, unchanged, and an ARM processor.
+
+**Updating from 0.2.3, 0.2.2, 0.2.1, 0.2.0 or 0.1.0:** install the APK for your TV over it, no need to uninstall. It is signed with the same key, so your sources, settings and cached games are kept.
+
+### Tested
+
+- Unit tests (80) and Android lint (0 errors) pass.
+- Both APKs have the same signing certificate as the 0.2.3 APK (checked with apksigner), and each contains the licence texts and `VERSIONS.txt`.
+- On a real Freebox Player POP (32-bit Android) with an Xbox Nano controller: games start in the built-in RetroArch, the A button works, and games copy from the Freebox's own disk once its sleep is turned off.
+- Also checked on an Android emulator. Not every core and console has been tried, and the 64-bit APK has not been tried on a real TV.
+
+### Known issues
+
+- Settings changed in RetroArch's menu are only kept if RetroArch saves them: quit with *Close Content* or *Main Menu → Quit*, not with Home.
+- On the Freebox Pop, the remote's voice search can appear as a second controller named *virtual-search*. It has no effect on games.
+
 ## RetroSalon 0.2.3 (2026-11-12)
 
 **RetroSalon now tells you whether your TV runs a 32-bit or 64-bit Android.**

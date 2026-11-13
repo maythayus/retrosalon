@@ -210,7 +210,7 @@ fun SettingsScreen(
                 Muted(stringResource(R.string.settings_emulators_help))
                 Text(tvArchSummary(arch), style = MaterialTheme.typography.titleSmall)
                 TvArchAdvice(arch)
-                // RetroArch intégré (version perso) : ses cœurs sont ceux de l'architecture de cet APK.
+                // RetroArch intégré : ses cœurs sont ceux de l'architecture de cet APK.
                 val raCores = remember { EmbeddedRetroArch.cores(context).size }
                 if (raCores > 0) {
                     Badge(stringResource(R.string.settings_retroarch_embedded, EmbeddedRetroArch.VERSION, raCores), Palette.accent)

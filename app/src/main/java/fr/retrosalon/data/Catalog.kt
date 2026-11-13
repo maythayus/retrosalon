@@ -69,7 +69,7 @@ data class GameSystem(
 private const val VIEW = "android.intent.action.VIEW"
 private const val MAIN = "android.intent.action.MAIN"
 
-/** RetroArch intégré à RetroSalon d'abord (version perso), puis les applis RetroArch installées. */
+/** RetroArch intégré à RetroSalon d'abord, puis les applis RetroArch installées. */
 private val RETROARCH = listOf(EmbeddedRetroArch.SELF, "com.retroarch.aarch64", "com.retroarch", "com.retroarch.ra32")
     .map { it to EmbeddedRetroArch.ACTIVITY }
 

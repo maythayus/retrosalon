@@ -15,9 +15,9 @@ android {
         applicationId = "fr.retrosalon"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        // Version perso : RetroArch et ses cœurs intégrés (module :retroarch).
-        versionName = "0.2.3-perso2"
+        versionCode = 7
+        // Depuis 0.3.0 : RetroArch et ses cœurs intégrés (module :retroarch).
+        versionName = "0.3.0"
     }
 
     // Un APK par architecture : 32 bits (armeabi-v7a, Freebox Pop…) et 64 bits (arm64-v8a).

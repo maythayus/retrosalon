@@ -1,4 +1,4 @@
-"""Récupère RetroArch et ses cœurs pour la version perso de RetroSalon.
+"""Récupère RetroArch et ses cœurs pour RetroSalon.
 
 Tout vient des sources officielles de libretro :
   - le code Java d'Android de RetroArch, sur GitHub (tag de la version) ;

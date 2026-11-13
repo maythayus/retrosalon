@@ -2,7 +2,7 @@
 
 **One launcher for every console on your Android TV, built for the Microsoft Xbox Nano controller.**
 
-> **Branch `retrosalon/retroarch-integre`: RetroSalon with RetroArch built in.** This build contains RetroArch 1.22.2 and 16 libretro cores, so most consoles play without installing anything else. It comes as two APKs, for 32-bit and 64-bit ARM TVs, which you build yourself. The standard RetroSalon, which contains no emulator and runs on every TV, is on the [`main`](https://github.com/maythayus/retrosalon/tree/main) branch and on the [releases page](https://github.com/maythayus/retrosalon/releases).
+> **RetroSalon 0.3.0 has RetroArch built in.** It contains RetroArch 1.22.2 and 16 libretro cores, so most consoles play without installing anything else. It comes as two APKs, for 32-bit and 64-bit ARM TVs, on the [releases page](https://github.com/maythayus/retrosalon/releases/latest). For an x86 TV, take RetroSalon 0.2.3 from the [releases page](https://github.com/maythayus/retrosalon/releases): it contains no emulator and runs on every TV.
 
 RetroSalon puts all your retro games in a single library on the TV, from the NES to the Switch. Pick a game with the controller and RetroSalon opens it in the right emulator. You no longer need to open RetroArch, then Dolphin, then PPSSPP, or remember which app runs which console.
 
@@ -13,12 +13,12 @@ RetroSalon puts all your retro games in a single library on the TV, from the NES
 
 | | |
 |---|---|
-| Version | 0.2.3-perso2 (RetroArch 1.22.2 built in) |
+| Version | 0.3.0 (RetroArch 1.22.2 built in) |
 | Minimum Android | **Android 8.0 (API 26)** |
 | Target Android | **Android 17 (API 37)** |
 | Devices | Android TV and Google TV with an ARM processor, 32-bit or 64-bit (also works on phones and tablets in landscape). No x86 build. |
 | Interface language | English and French, following the system language |
-| Licence | Source code: [MIT](LICENSE). Each APK of this build: RetroSalon with RetroArch under GPL-3.0; the cores and some files keep their own licences, some of them non-commercial. See [License](#license). |
+| Licence | Source code: [MIT](LICENSE). Each APK: RetroSalon with RetroArch under GPL-3.0; the cores and some files keep their own licences, some of them non-commercial. See [License](#license). |
 
 **Language.** RetroSalon follows the TV's language: French when the system is set to French, English for any other language. On Android 13 and newer, you can also give RetroSalon its own language, where the system settings offer it: *Apps → RetroSalon → Language*. Console and emulator names stay as they are. The screen names below are the English ones.
 
@@ -155,7 +155,7 @@ When an emulator needs a newer Android than the TV has, *Settings → Choose emu
 
 ### 32-bit and 64-bit TVs
 
-This build comes as **two APKs**: one for 32-bit ARM Android and one for 64-bit ARM Android, each with the RetroArch engine and cores for that Android (see [Installing](#installing)). There is no x86 or x86_64 APK: on an x86 TV, use the standard RetroSalon from the [releases page](https://github.com/maythayus/retrosalon/releases), which runs on every TV. Some TV boxes run a 32-bit Android even with a 64-bit processor, for example the Freebox Player POP: they need the 32-bit APK.
+Since 0.3.0, RetroSalon comes as **two APKs**: one for 32-bit ARM Android and one for 64-bit ARM Android, each with the RetroArch engine and cores for that Android (see [Installing](#installing)). There is no x86 or x86_64 APK: on an x86 TV, use RetroSalon 0.2.3 from the [releases page](https://github.com/maythayus/retrosalon/releases), which has no emulator inside and runs on every TV. Some TV boxes run a 32-bit Android even with a 64-bit processor, for example the Freebox Player POP: they need the 32-bit APK.
 
 Some emulators are **64-bit only** and won't install on a 32-bit TV: Dolphin, Azahar, NetherSX2, ARMSX2, Eden and the current MAME4droid (2024 version). On a 32-bit TV, use the other emulators in each console's list: for example the built-in RetroArch (with PCSX ReARMed or SwanStation for the PlayStation), DuckStation or ePSXe, and the older MAME4droid 0.139u1 for arcade games, which needs games in the MAME 0.139 format.
 
@@ -259,15 +259,17 @@ RetroSalon passes the game to each emulator the way that emulator expects. The *
 
 ## Installing
 
-The APKs of this build are not published: build them yourself (see [Building from source](#building-from-source)). The releases page only has the standard RetroSalon, with no emulator inside.
+Download the APK from the [latest release](https://github.com/maythayus/retrosalon/releases/latest), or build it yourself (see [Building from source](#building-from-source)).
 
-1. Pick the APK that matches the TV's Android, from `app/build/outputs/apk/release/`. Each is about 80 MB.
-   - `app-armeabi-v7a-release.apk` for a **32-bit** Android, such as the Freebox Player POP;
-   - `app-arm64-v8a-release.apk` for a **64-bit** Android.
+1. Pick the APK that matches the TV's Android. Each is about 80 MB.
+   - `RetroSalon-0.3.0-32bit.apk` for a **32-bit** Android, such as the Freebox Player POP;
+   - `RetroSalon-0.3.0-64bit.apk` for a **64-bit** Android.
 
-   To find out which one the TV runs, run `adb shell getprop ro.product.cpu.abilist`: if the list contains `arm64-v8a`, take the 64-bit APK; if it only has `armeabi-v7a` and `armeabi`, take the 32-bit one. If it only has `x86` or `x86_64`, this build can't run on the TV.
+   If you build it yourself, the same two APKs are `app-armeabi-v7a-release.apk` and `app-arm64-v8a-release.apk`, in `app/build/outputs/apk/release/`.
+
+   To find out which one the TV runs, run `adb shell getprop ro.product.cpu.abilist`: if the list contains `arm64-v8a`, take the 64-bit APK; if it only has `armeabi-v7a` and `armeabi`, take the 32-bit one. If it only has `x86` or `x86_64`, RetroSalon 0.3.0 can't run on the TV: take RetroSalon 0.2.3 from the releases page.
 2. Install it on the TV. Choose one:
-   - over the network with `adb install app-armeabi-v7a-release.apk` (or the 64-bit file);
+   - over the network with `adb install RetroSalon-0.3.0-32bit.apk` (or the 64-bit file);
    - with an app such as *Downloader*;
    - from a USB stick with a file manager.
 
@@ -275,7 +277,7 @@ The APKs of this build are not published: build them yourself (see [Building fro
 3. Open **RetroSalon** from the TV's app row. It has its own TV banner.
 4. Install the other emulators you need from Google Play, F-Droid or their official pages.
 
-**Updating from RetroSalon 0.2.3 or older.** Android only installs this build over an existing RetroSalon, keeping your sources, settings and cached games, when both APKs are signed with the same key. The APKs on the releases page are signed with the maintainer's key, so a build you make yourself can't replace them: write down your sources and settings, then uninstall RetroSalon first, as they are lost. Games already in the cache stay on the TV. A build made on the same computer as the RetroSalon already installed is signed with the same local Android debug key, and installs over it.
+**Updating from RetroSalon 0.2.3 or older.** Install the 0.3.0 APK over it, no need to uninstall: it is signed with the same key as the earlier releases, so your sources, settings and cached games are kept. Android only installs an APK over an existing RetroSalon when both are signed with the same key. The APKs on the releases page are signed with the maintainer's key, so a build you make yourself can't replace them: write down your sources and settings, then uninstall RetroSalon first, as they are lost. Games already in the cache stay on the TV. A build made on the same computer as the RetroSalon already installed is signed with the same local Android debug key, and installs over it.
 
 ---
 
@@ -322,7 +324,7 @@ Then set `sdk.dir` in `local.properties`, or open the project in Android Studio,
 ./gradlew assembleRelease
 ```
 
-The APKs are written to `app/build/outputs/apk/`, one per ABI: `release/app-armeabi-v7a-release.apk` (32-bit ARM) and `release/app-arm64-v8a-release.apk` (64-bit ARM), and the same names with `debug` for the debug build. The release build is signed with the local Android debug key so it can be sideloaded. If you share your own builds, sign them with your own keystore, and read [License](#license) first: an APK of this build comes with obligations.
+The APKs are written to `app/build/outputs/apk/`, one per ABI: `release/app-armeabi-v7a-release.apk` (32-bit ARM) and `release/app-arm64-v8a-release.apk` (64-bit ARM), and the same names with `debug` for the debug build. The release build is signed with the local Android debug key so it can be sideloaded. If you share your own builds, sign them with your own keystore, and read [License](#license) first: an APK with RetroArch inside comes with obligations.
 
 **Network tip:** if Gradle fails to download with `Cannot assign requested address` on a network where only IPv6 works, make the JVM prefer IPv6:
 
@@ -366,9 +368,9 @@ legal/
 
 ## Legal
 
-This build of RetroSalon contains emulators: RetroArch and 16 libretro cores, which `retroarch/fetch.py` downloads from libretro's official sources (buildbot.libretro.com and libretro's repositories on GitHub) before the APK is built. It includes no game and no BIOS, and downloads none. The only console system files it contains are the PSP system fonts that the PPSSPP project redistributes with its system files. Use only games and BIOS files you own and dumped yourself, and follow the laws of your country. Install the other emulators from their official sources.
+Since 0.3.0, RetroSalon contains emulators: RetroArch and 16 libretro cores, which `retroarch/fetch.py` downloads from libretro's official sources (buildbot.libretro.com and libretro's repositories on GitHub) before the APK is built. It includes no game and no BIOS, and downloads none. The only console system files it contains are the PSP system fonts that the PPSSPP project redistributes with its system files. Use only games and BIOS files you own and dumped yourself, and follow the laws of your country. Install the other emulators from their official sources.
 
-**Non-commercial components.** The Snes9x, Genesis Plus GX and FinalBurn Neo cores, and RetroArch's menu sounds, may only be redistributed for non-commercial purposes. An APK of this build must be given away free: never sold, bundled with a paid product or device, offered behind a paywall or in exchange for a donation, or offered from a page or app with advertising.
+**Non-commercial components.** The Snes9x, Genesis Plus GX and FinalBurn Neo cores, and RetroArch's menu sounds, may only be redistributed for non-commercial purposes. RetroSalon's APKs must be given away free: never sold, bundled with a paid product or device, offered behind a paywall or in exchange for a donation, or offered from a page or app with advertising.
 
 RetroArch and libretro are trademarks of the libretro team. Xbox and Xbox Nano are trademarks of Microsoft. Console names are trademarks of their owners. RetroSalon is not affiliated with or endorsed by the libretro team, the authors of any emulator or core, Microsoft, or any console maker.
 
@@ -383,8 +385,8 @@ RetroArch and libretro are trademarks of the libretro team. Xbox and Xbox Nano a
 
 RetroSalon's own source code is released under the [MIT License](LICENSE). Third-party components keep their own licences.
 
-Each APK of this build also contains RetroArch's Android code, compiled together with RetroSalon, so RetroSalon and RetroArch together are distributed under the [GNU General Public License version 3](legal/licenses/GPL-3.0.txt). The cores are separate programs, not covered by it, under their own licences: GPL-2.0, GPL-3.0, MPL-2.0 (mGBA), and the non-commercial licences of Snes9x, Genesis Plus GX and FinalBurn Neo. Some files keep their own licences too: the menu sounds (CC BY-NC 3.0) and fonts (OFL-1.1 and others).
+Each APK, since 0.3.0, also contains RetroArch's Android code, compiled together with RetroSalon, so RetroSalon and RetroArch together are distributed under the [GNU General Public License version 3](legal/licenses/GPL-3.0.txt). The cores are separate programs, not covered by it, under their own licences: GPL-2.0, GPL-3.0, MPL-2.0 (mGBA), and the non-commercial licences of Snes9x, Genesis Plus GX and FinalBurn Neo. Some files keep their own licences too: the menu sounds (CC BY-NC 3.0) and fonts (OFL-1.1 and others).
 
-This project does not publish APKs of this build. If you give one to someone else, you must also offer them the complete source code of RetroArch and of every GPL or MPL core in it, at the revisions the APK was built from, and keep the non-commercial conditions above. Share only APKs built from a committed tree, so the source of RetroSalon itself can be matched too. [legal/THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md#source-code) says where each one is.
+Each release on the [releases page](https://github.com/maythayus/retrosalon/releases) has, next to its APKs, the complete source code of RetroArch and of every GPL or MPL core in them, at the revisions the APKs were built from, with their submodules and build dependencies (`*-source.tar.xz`). RetroSalon's own source is the release's tag. If you give a RetroSalon APK to someone else, give them those archives too, or the link to the release they come from, and keep the non-commercial conditions above. If you share an APK you built yourself, build it from a committed tree, so the source of RetroSalon itself can be matched, and offer the source of the cores it contains: they are the nightly builds of the day you first ran `fetch.py`, listed in `retroarch/vendor/VERSIONS.txt`, not the ones of a release. [legal/THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md#source-code) says where each one is.
 
 The copyright notices are in [legal/THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md), and the GPL-3.0, GPL-2.0, MPL-2.0 and OFL-1.1 texts in [legal/licenses/](legal/licenses). That covers the ES-DE material, every library bundled in the APK, RetroArch and the 16 cores. The licence texts of Snes9x, Genesis Plus GX and FinalBurn Neo are downloaded by `retroarch/fetch.py` from their repositories and are not stored here. All of them ship inside the APK (`assets/THIRD_PARTY_NOTICES.md`, `assets/licenses/`, `assets/retroarch/licenses/`).

@@ -23,7 +23,7 @@ import java.util.Locale
 import java.util.zip.ZipInputStream
 
 /**
- * RetroArch intégré (version perso) : le moteur de RetroArch et ses cœurs sont dans l'APK de RetroSalon.
+ * RetroArch intégré : le moteur de RetroArch et ses cœurs sont dans l'APK de RetroSalon.
  *
  * - Les cœurs sont des bibliothèques de l'APK (lib<cœur>_libretro_android.so), qu'Android installe dans
  *   le dossier des bibliothèques de l'appli. RetroArch les trouve sous leur nom habituel par des liens

@@ -1,4 +1,4 @@
-// RetroArch intégré à RetroSalon (version perso).
+// RetroArch intégré à RetroSalon (depuis 0.3.0).
 // Le code Java, le moteur natif, ses fichiers et les cœurs sont récupérés par fetch.py dans vendor/
 // (non versionné) : lancez « python -I retroarch/fetch.py » avant le premier build.
 plugins {
