@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
+import fr.retrosalon.data.EmbeddedRetroArch
 import fr.retrosalon.data.Game
 import fr.retrosalon.data.GameCache
 import fr.retrosalon.data.Launch
@@ -61,6 +63,14 @@ class AppModel(app: Application) : AndroidViewModel(app) {
 
     private var launchJob: Job? = null
     private var launchGen = 0
+
+    init {
+        // Prépare le RetroArch intégré dès l'ouverture (décompression après une mise à jour) :
+        // le premier jeu démarre ensuite sans attendre.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { EmbeddedRetroArch.prepare(app) }.onFailure { Log.w("RetroSalon", "RetroArch intégré", it) }
+        }
+    }
 
     /** Texte traduit dans la langue du système. */
     private fun str(@StringRes id: Int, vararg args: Any): String =
@@ -173,6 +183,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 update { it?.copy(step = str(R.string.model_launch_starting, launcher.label), progress = 1f) }
+                if (Launch.usesEmbedded(app, launcher)) withContext(Dispatchers.IO) { EmbeddedRetroArch.prepare(app) }
                 val error = Launch.start(app, launcher, prepared)
                 update { if (error != null) it?.copy(error = error) else null }
                 refreshCacheUsage()
@@ -181,6 +192,19 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                 throw e
             } catch (e: Exception) {
                 update { it?.copy(error = str(R.string.model_launch_prepare_failed, e.userMessage(app))) }
+            }
+        }
+    }
+
+    /** Ouvre le menu du RetroArch intégré, sans jeu : réglages, manettes, shaders… */
+    fun openRetroArch() {
+        val app = getApplication<Application>()
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { EmbeddedRetroArch.prepare(app) }
+                EmbeddedRetroArch.start(app, EmbeddedRetroArch.menuIntent(app))
+            } catch (e: Exception) {
+                launch = LaunchState("RetroArch", "", error = str(R.string.settings_retroarch_open_failed, e.userMessage(app)))
             }
         }
     }

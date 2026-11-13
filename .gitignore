@@ -8,3 +8,16 @@ local.properties
 captures/
 .DS_Store
 dist/
+retroarch/vendor/
+retroarch/build/
+# Clés de signature : jamais dans le dépôt.
+*.jks
+*.keystore
+keystore.properties
+__pycache__/
+# APK, bundles et journaux : jamais dans le dépôt (Android Studio écrit les builds signés dans app/release/).
+*.apk
+*.aab
+/app/release/
+/app/debug/
+*.log

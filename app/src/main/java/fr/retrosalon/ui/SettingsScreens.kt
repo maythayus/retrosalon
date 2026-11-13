@@ -42,6 +42,7 @@ import fr.retrosalon.R
 import fr.retrosalon.StorageAccess
 import fr.retrosalon.TvArch
 import fr.retrosalon.formatBytes
+import fr.retrosalon.data.EmbeddedRetroArch
 import fr.retrosalon.data.Launch
 import fr.retrosalon.data.Source
 import fr.retrosalon.data.Systems
@@ -209,7 +210,20 @@ fun SettingsScreen(
                 Muted(stringResource(R.string.settings_emulators_help))
                 Text(tvArchSummary(arch), style = MaterialTheme.typography.titleSmall)
                 TvArchAdvice(arch)
-                ActionButton(stringResource(R.string.settings_emulators_choose), onClick = onEmulators)
+                // RetroArch intégré (version perso) : ses cœurs sont ceux de l'architecture de cet APK.
+                val raCores = remember { EmbeddedRetroArch.cores(context).size }
+                if (raCores > 0) {
+                    Badge(stringResource(R.string.settings_retroarch_embedded, EmbeddedRetroArch.VERSION, raCores), Palette.accent)
+                    Muted(stringResource(R.string.settings_retroarch_help))
+                    Muted(stringResource(R.string.settings_retroarch_bios))
+                    Mono(EmbeddedRetroArch.systemDir().absolutePath)
+                    // Mentions légales demandées par la GPL v3 (section 5 d) pour l'APK qui contient RetroArch.
+                    Muted(stringResource(R.string.settings_retroarch_legal))
+                }
+                ButtonRow {
+                    ActionButton(stringResource(R.string.settings_emulators_choose), onClick = onEmulators)
+                    if (raCores > 0) ActionButton(stringResource(R.string.settings_retroarch_open), onClick = { model.openRetroArch() })
+                }
             }
         }
     }
@@ -270,7 +284,11 @@ fun EmulatorsScreen(model: AppModel, onBack: () -> Unit) {
                             Mono(File(model.cacheRoot, system.id).absolutePath)
                         }
                         UriMode.PATH -> if (l.id.startsWith("ra:")) {
-                            Muted(stringResource(R.string.emulators_retroarch_core, l.label.substringAfter("· ")))
+                            val embedded = remember(tick, l.id) { Launch.usesEmbedded(context, l) }
+                            Muted(
+                                if (embedded) stringResource(R.string.emulators_retroarch_embedded)
+                                else stringResource(R.string.emulators_retroarch_core, l.label.substringAfter("· ")),
+                            )
                         }
                         UriMode.PROVIDER -> Muted(stringResource(R.string.emulators_provider_auto))
                     }

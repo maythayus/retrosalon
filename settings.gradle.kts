@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "RetroSalon"
 include(":app")
+// RetroArch intégré (version perso) : voir retroarch/fetch.py.
+include(":retroarch")

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RetroArch intégré. Les deux activités viennent de RetroArch (pkg/android/phoenix) ; elles tournent dans
+  leur propre processus « :retroarch », comme l'appli RetroArch : quand RetroArch se ferme (il quitte
+  le processus), RetroSalon reste ouvert. Pas d'icône sur l'écran d'accueil : RetroSalon les lance.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:glEsVersion="0x00020000" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application>
+        <activity
+            android:name="com.retroarch.browser.retroactivity.RetroActivityFuture"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:process=":retroarch"
+            android:taskAffinity="${applicationId}.retroarch"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="retroarch-activity" />
+            <meta-data
+                android:name="android.app.func_name"
+                android:value="ANativeActivity_onCreate" />
+        </activity>
+
+        <!-- Écran de démarrage de RetroArch : RetroArch l'ouvre quand on appuie sur Retour hors du menu. -->
+        <activity
+            android:name="com.retroarch.browser.mainmenu.MainMenuActivity"
+            android:exported="false"
+            android:process=":retroarch"
+            android:taskAffinity="${applicationId}.retroarch"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+</manifest>

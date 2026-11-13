@@ -15,8 +15,20 @@ android {
         applicationId = "fr.retrosalon"
         minSdk = 26
         targetSdk = 37
-        versionCode = 5
-        versionName = "0.2.3"
+        versionCode = 6
+        // Version perso : RetroArch et ses cœurs intégrés (module :retroarch).
+        versionName = "0.2.3-perso2"
+    }
+
+    // Un APK par architecture : 32 bits (armeabi-v7a, Freebox Pop…) et 64 bits (arm64-v8a).
+    // Les cœurs de RetroArch pèsent lourd : chaque APK ne garde que ceux de son architecture.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = false
+        }
     }
 
     buildTypes {
@@ -46,6 +58,12 @@ android {
     }
 
     packaging {
+        // Bibliothèques extraites à l'installation : RetroArch charge ses cœurs depuis un fichier.
+        jniLibs {
+            useLegacyPackaging = true
+            // Un script (voir EmbeddedRetroArch.setUpProcess), pas une vraie bibliothèque : rien à retirer.
+            keepDebugSymbols += "**/libretrosalon-getprop.so"
+        }
         resources {
             excludes += setOf(
                 "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
@@ -79,6 +97,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.19.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("com.hierynomus:smbj:0.15.0")
+    implementation(project(":retroarch"))
 
     testImplementation("junit:junit:4.13.2")
 }
