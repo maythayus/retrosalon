@@ -181,6 +181,13 @@ File names sent by the server that would point outside the console's cache folde
 
 **IPv6 first, IPv4 fallback.** RetroSalon tries every address of the server, IPv6 first, waiting up to 3 seconds for each. If no IPv6 address answers, it uses IPv4. You can type a name (`nas.local`), an IPv4 address (`192.168.1.20`), an IPv6 address (`fd00::20` or `[fd00::20]:445`), or an `smb://nas.local` or `\\NAS` address. If you paste a full address such as `smb://nas.local/games`, only the server part is used; put the share name in the *Share* field.
 
+#### Games on a disk plugged into a Freebox (Freebox Pop and others)
+
+The Freebox can share its disk on your home network. Its settings are in Freebox OS: open `http://mafreebox.freebox.fr` in a browser on your home network, click **Paramètres de la Freebox** (Freebox settings), then the **Mode avancé** (advanced mode) tab. The labels below are the French ones shown by Freebox OS.
+
+1. **Share the disk.** Under *Partage de fichiers* (file sharing), click **Partages Windows** (Windows shares). Tick **Activer le partage de fichiers** (enable file sharing) and the SMBv2/SMBv3 option. Tick **Accès authentifié** (authenticated access), choose a user name and a password, then click **OK**. Users report sign-in problems with the user name `freebox`, so choose another one. The same user name and password give access to every disk plugged into the Freebox.
+2. **Turn off disk standby.** By default the Freebox puts its disk to sleep after 10 minutes without use. Waking it up can take longer than RetroSalon waits, so the first game launched after a pause can fail with a *timed out* error. Under *Partage de fichiers*, click **Disques** (disks), then **Paramètres** (settings) at the bottom left of the window. Under *Gestion de l'alimentation SATA externe* (external SATA power management), untick **Activer la mise en veille des périphériques SATA** (enable standby for SATA devices), then click **OK**.
+
 ### What RetroSalon understands in your folders
 
 - **Multi-file discs.** `.cue`, `.gdi` and `.ccd` files are listed, and the track files in the same folder (`.bin`, `.img`, `.sub`, `.raw`) are hidden. When copying from a server, the tracks are copied with them. Keep stand-alone `.img` games in a folder with no `.cue` or `.ccd` file, or they will be hidden too.

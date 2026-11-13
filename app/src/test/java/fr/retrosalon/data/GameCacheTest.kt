@@ -1,5 +1,10 @@
 package fr.retrosalon.data
 
+import com.hierynomus.mserref.NtStatus
+import com.hierynomus.mssmb2.SMB2MessageCommandCode
+import com.hierynomus.mssmb2.SMBApiException
+import com.hierynomus.protocol.transport.TransportException
+import com.hierynomus.smbj.common.SMBRuntimeException
 import fr.retrosalon.R
 import fr.retrosalon.UiException
 import kotlinx.coroutines.CancellationException
@@ -18,7 +23,10 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import java.net.SocketException
 import java.nio.file.Files
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeoutException
 
 /**
  * Serveur en mémoire : chemin relatif à la racine du partage → contenu du fichier.
@@ -44,6 +52,47 @@ private class FakeServer(
     }
 }
 
+/** Ce que smbj lève quand le serveur ne répond pas à temps (message vu sur la TV). */
+private fun smbTimeout() = TransportException(ExecutionException(SMBRuntimeException(TimeoutException("Timeout expired"))))
+
+/**
+ * Serveur qui cesse de répondre après [cutAfter] octets d'un fichier, aux [stalls] premières lectures,
+ * en levant [error]. Les lectures suivantes vont jusqu'au bout. [offsets] : point de départ de chaque lecture.
+ */
+private class StallingServer(
+    private val files: Map<String, ByteArray>,
+    private val cutAfter: Int,
+    private var stalls: Int,
+    private val error: () -> Throwable = ::smbTimeout,
+) : SourceFs {
+    val offsets = mutableListOf<Long>()
+
+    override fun list(rel: String) = emptyList<Entry>()
+    override fun size(rel: String) = files[rel]?.size?.toLong() ?: throw FileNotFoundException(rel)
+    override fun open(rel: String): InputStream = open(rel, 0)
+    override fun open(rel: String, offset: Long): InputStream {
+        offsets += offset
+        val data = files[rel] ?: throw FileNotFoundException(rel)
+        val stall = stalls-- > 0
+        return object : InputStream() {
+            var pos = offset.toInt()
+            override fun read(): Int {
+                val one = ByteArray(1)
+                return if (read(one, 0, 1) < 0) -1 else one[0].toInt() and 0xFF
+            }
+            override fun read(b: ByteArray, off: Int, len: Int): Int {
+                if (stall && pos >= cutAfter) throw error()
+                val end = if (stall) minOf(cutAfter, data.size) else data.size
+                if (pos >= end) return -1
+                val n = minOf(len, end - pos)
+                System.arraycopy(data, pos, b, off, n)
+                pos += n
+                return n
+            }
+        }
+    }
+}
+
 class GameCacheTest {
     private val root: File = Files.createTempDirectory("retrosalon-cache").toFile()
     private val psx = File(root, "psx")
@@ -57,12 +106,16 @@ class GameCacheTest {
 
     /** Cache dont le serveur est éteint : toute connexion échoue avec [down]. */
     private val down = IOException("serveur éteint")
-    private fun offlineCache() = GameCache({ root.path }, { 32 }) { connections++; throw down }
-    private fun onlineCache(server: FakeServer) = GameCache({ root.path }, { 32 }) { connections++; server }
+    private fun offlineCache() = GameCache({ root.path }, { 32 }, retryDelayMs = 0) { connections++; throw down }
+    private fun onlineCache(server: SourceFs) = GameCache({ root.path }, { 32 }, retryDelayMs = 0) { connections++; server }
+
+    /** Nouveaux essais annoncés : numéro de l'essai, nombre d'essais en tout. */
+    private val retries = mutableListOf<Pair<Int, Int>>()
 
     private fun game(rel: String, size: Long) = Game("nas", "psx", "ps1", rel, size)
 
-    private suspend fun GameCache.launch(game: Game) = prepare(source, game, { connectNotices++ }) { _, _ -> }
+    private suspend fun GameCache.launch(game: Game) =
+        prepare(source, game, { connectNotices++ }, { attempt, attempts -> retries += attempt to attempts }) { _, _ -> }
 
     private fun cached(rel: String, text: String): File =
         File(psx, rel).apply { parentFile!!.mkdirs(); writeText(text) }
@@ -421,5 +474,198 @@ class GameCacheTest {
         val iso = File(psx, "Big.iso").apply { parentFile!!.mkdirs(); writeText("FILE \"ghost.bin\" BINARY\n") }
         assertEquals(emptyList<Companion>(), companions(iso))
         assertEquals(listOf(iso.name), cachedFiles(psx, "Big.iso", iso.length())!!.map { it.name })
+    }
+
+    /** Une ROM de N64 comme Mortal Kombat 4, en plus petit. */
+    private val rom = ByteArray(10_000) { (it * 7).toByte() }
+
+    @Test
+    fun serverThatStopsAnsweringMidCopyIsRetriedAndTheCopyResumes() = runBlocking {
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 4_000, stalls = 1)
+
+        val prepared = onlineCache(server).launch(game("MK4.z64", rom.size.toLong()))
+
+        assertArrayEquals(rom, prepared.file.readBytes())
+        // Deuxième connexion, qui reprend après les 4 000 octets déjà copiés.
+        assertEquals(2, connections)
+        assertEquals(listOf(0L, 4_000L), server.offsets)
+        assertEquals(listOf(2 to GameCache.ATTEMPTS), retries)
+        assertEquals(emptyList<String>(), leftovers())
+        assertEquals(emptyList<String>(), provisionals())
+    }
+
+    @Test
+    fun serverThatNeverAnswersEndsWithAClearMessage() {
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 3_000, stalls = 99)
+
+        val e = assertThrows(UiException::class.java) {
+            runBlocking { onlineCache(server).launch(game("MK4.z64", rom.size.toLong())) }
+        }
+        assertEquals(R.string.err_server_timeout, e.res)
+        assertEquals(listOf("NAS"), e.args.toList())
+        assertEquals(GameCache.ATTEMPTS, connections)
+        assertEquals(listOf(2 to 3, 3 to 3), retries)
+        // Chaque essai repart de là où le précédent s'est arrêté (ici, toujours au même endroit).
+        assertEquals(listOf(0L, 3_000L, 3_000L), server.offsets)
+        assertFalse(File(psx, "MK4.z64").exists())
+        assertEquals(emptyList<String>(), leftovers())
+    }
+
+    @Test
+    fun connectionDroppingEveryTimeSaysSo() {
+        val reset = { TransportException(SocketException("Connection reset")) }
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 5_000, stalls = 99, error = reset)
+
+        val e = assertThrows(UiException::class.java) {
+            runBlocking { onlineCache(server).launch(game("MK4.z64", rom.size.toLong())) }
+        }
+        assertEquals(R.string.err_server_connection_lost, e.res)
+        assertEquals(GameCache.ATTEMPTS, connections)
+    }
+
+    @Test
+    fun serverTooSlowToAcceptTheConnectionIsRetried() = runBlocking {
+        val server = FakeServer(mapOf("ps1/MK4.z64" to rom))
+        var calls = 0
+        val cache = GameCache({ root.path }, { 32 }, retryDelayMs = 0) {
+            if (++calls == 1) throw smbTimeout()
+            server
+        }
+
+        val prepared = cache.launch(game("MK4.z64", rom.size.toLong()))
+
+        assertArrayEquals(rom, prepared.file.readBytes())
+        assertEquals(2, calls)
+        assertEquals(listOf(2 to 3), retries)
+    }
+
+    @Test
+    fun serverOffIsNotRetried() {
+        // Injoignable (éteint) : pas d'attente inutile, l'erreur arrive tout de suite.
+        assertThrows(IOException::class.java) { runBlocking { offlineCache().launch(game("MK4.z64", 10)) } }
+        assertEquals(1, connections)
+        assertEquals(emptyList<Pair<Int, Int>>(), retries)
+    }
+
+    @Test
+    fun aCopyLeftHalfDoneByAnEarlierLaunchStartsOver() = runBlocking {
+        // Reste d'une copie d'un lancement précédent (appli tuée) : jamais recollé à la nouvelle copie.
+        File(psx, "MK4.z64.new.part").apply { parentFile!!.mkdirs(); writeText("vieux morceau") }
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 0, stalls = 0)
+
+        val prepared = onlineCache(server).launch(game("MK4.z64", rom.size.toLong()))
+
+        assertArrayEquals(rom, prepared.file.readBytes())
+        assertEquals(listOf(0L), server.offsets)
+        assertEquals(emptyList<String>(), leftovers())
+    }
+
+    @Test
+    fun timeoutsAreRecognisedButServerAnswersAreNot() {
+        assertTrue(SmbFs.isNetworkGlitch(smbTimeout()))
+        assertTrue(SmbFs.isTimeout(smbTimeout()))
+        assertTrue(SmbFs.isNetworkGlitch(TransportException(SocketException("Connection reset"))))
+        assertFalse(SmbFs.isTimeout(TransportException(SocketException("Connection reset"))))
+        // Réponses du serveur, erreurs de RetroSalon ou du disque de la TV : réessayer n'y changerait rien.
+        assertFalse(SmbFs.isNetworkGlitch(IOException("No space left on device")))
+        assertFalse(SmbFs.isNetworkGlitch(FileNotFoundException("MK4.z64")))
+        assertFalse(SmbFs.isNetworkGlitch(UiException(R.string.err_copy_changed, "MK4.z64", cause = smbTimeout())))
+    }
+
+    @Test
+    fun aCopyLeftByAnEarlierLaunchIsNotResumedEvenAfterARetry() = runBlocking {
+        // Morceau d'une ancienne version laissé par un lancement interrompu (TV mise en veille) ; puis le premier
+        // essai échoue avant d'atteindre ce fichier. Le deuxième ne doit pas le recoller à la nouvelle copie.
+        File(psx, "MK4.z64.new.part").apply { parentFile!!.mkdirs(); writeBytes(ByteArray(4_000) { 0x55 }) }
+        val server = FakeServer(mapOf("ps1/MK4.z64" to rom))
+        var calls = 0
+        val cache = GameCache({ root.path }, { 32 }, retryDelayMs = 0) {
+            if (++calls == 1) throw smbTimeout()
+            server
+        }
+
+        val prepared = cache.launch(game("MK4.z64", rom.size.toLong()))
+
+        assertArrayEquals(rom, prepared.file.readBytes())
+        assertEquals(2, calls)
+    }
+
+    @Test
+    fun serverStillUnreachableRightAfterADropIsTriedAgain() = runBlocking {
+        // Le Wi-Fi tombe en pleine copie ; au deuxième essai la TV n'a pas encore retrouvé le réseau.
+        val reset = { TransportException(SocketException("Connection reset")) }
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 4_000, stalls = 1, error = reset)
+        var calls = 0
+        val cache = GameCache({ root.path }, { 32 }, retryDelayMs = 0) {
+            if (++calls == 2) throw UiException(R.string.err_server_unreachable, 445, "IPv4 192.168.1.20")
+            server
+        }
+
+        val prepared = cache.launch(game("MK4.z64", rom.size.toLong()))
+
+        assertArrayEquals(rom, prepared.file.readBytes())
+        assertEquals(3, calls)
+        assertEquals(listOf(2 to 3, 3 to 3), retries)
+        // Le troisième essai reprend la partie copiée au premier.
+        assertEquals(listOf(0L, 4_000L), server.offsets)
+    }
+
+    @Test
+    fun aGameReplacedOnTheServerBetweenTwoTriesIsCopiedAgainFromTheStart() = runBlocking {
+        // Entre les deux essais, le jeu est remplacé sur le serveur par une autre version de même taille.
+        val newer = ByteArray(rom.size) { (it * 3 + 1).toByte() }
+        val before = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 4_000, stalls = 1)
+        val replaced = StallingServer(mapOf("ps1/MK4.z64" to newer), cutAfter = 0, stalls = 0)
+        val after = object : SourceFs by replaced {
+            override fun stamp(rel: String) = "${size(rel)}/nouvelle date"
+        }
+        var calls = 0
+        val cache = GameCache({ root.path }, { 32 }, retryDelayMs = 0) { if (++calls == 1) before else after }
+
+        val prepared = cache.launch(game("MK4.z64", rom.size.toLong()))
+
+        // Pas le début de l'ancienne version collé à la fin de la nouvelle.
+        assertArrayEquals(newer, prepared.file.readBytes())
+        assertEquals(listOf(0L), replaced.offsets)
+    }
+
+    @Test
+    fun aPasswordRefusedAfterADropIsNotTriedAgain() {
+        // Des échecs de connexion répétés peuvent bloquer le compte sur un PC Windows.
+        val server = StallingServer(mapOf("ps1/MK4.z64" to rom), cutAfter = 4_000, stalls = 1)
+        val refused = SMBApiException(NtStatus.STATUS_LOGON_FAILURE.value, SMB2MessageCommandCode.SMB2_SESSION_SETUP, null)
+        var calls = 0
+        val cache = GameCache({ root.path }, { 32 }, retryDelayMs = 0) {
+            if (++calls >= 2) throw refused
+            server
+        }
+
+        val e = assertThrows(SMBApiException::class.java) {
+            runBlocking { cache.launch(game("MK4.z64", rom.size.toLong())) }
+        }
+        assertSame(refused, e)
+        assertEquals(2, calls)
+        assertEquals(listOf(2 to 3), retries)
+    }
+
+    /** Source avec deux consoles ; la liste du dossier n64 échoue avec [n64Error]. */
+    private fun twoConsoles(n64Error: () -> Throwable) = object : SourceFs {
+        override fun list(rel: String): List<Entry> = when (rel) {
+            "" -> listOf(Entry("n64", true, 0), Entry("snes", true, 0))
+            "n64" -> throw n64Error()
+            else -> listOf(Entry("Zelda.sfc", false, 10))
+        }
+        override fun open(rel: String): InputStream = throw FileNotFoundException(rel)
+        override fun size(rel: String): Long = throw FileNotFoundException(rel)
+    }
+
+    @Test
+    fun scanStopsOnATimeoutSoTheLibraryKeepsItsGames() {
+        // Avant : le dossier lent était sauté sans rien dire, et ses jeux disparaissaient de la bibliothèque.
+        // Maintenant le scan de la source échoue, et la bibliothèque garde ses jeux d'avant.
+        assertThrows(TransportException::class.java) { Scanner.scan(twoConsoles(::smbTimeout), "nas", "jeux") }
+        // Un dossier illisible pour une autre raison est toujours simplement sauté.
+        val games = Scanner.scan(twoConsoles { IOException("accès refusé") }, "nas", "jeux")
+        assertEquals(listOf("Zelda.sfc"), games.map { it.rel })
     }
 }

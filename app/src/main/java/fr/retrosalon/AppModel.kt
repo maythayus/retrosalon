@@ -102,7 +102,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                     }
                     fs.use { found += Scanner.scan(it, source.id, rootName) }
                 } catch (e: Exception) {
-                    problems += str(R.string.model_scan_problem_item, source.label, e.userMessage(app))
+                    problems += str(R.string.model_scan_problem_item, source.label, SmbFs.explain(e, source.label).userMessage(app))
                     unreachable += source.id
                 }
             }
@@ -157,6 +157,9 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                         game,
                         // Une copie annulée encore en cours est attendue par le cache lui-même.
                         onConnect = { post { it.copy(step = str(R.string.model_launch_copying_from, source.label)) } },
+                        onRetry = { attempt, attempts ->
+                            post { it.copy(step = str(R.string.model_launch_retrying, source.label, attempt, attempts)) }
+                        },
                     ) { done, total ->
                         if (total > 0) {
                             val p = (done.toDouble() / total).toFloat().coerceIn(0f, 1f)
@@ -214,7 +217,7 @@ class AppModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         } catch (e: Exception) {
-            false to str(R.string.model_smb_failed, e.userMessage(getApplication<Application>()))
+            false to str(R.string.model_smb_failed, SmbFs.explain(e, source.label).userMessage(getApplication<Application>()))
         }
     }
 

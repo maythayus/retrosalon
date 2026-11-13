@@ -17,6 +17,30 @@ interface SourceFs : AutoCloseable {
     fun open(rel: String): InputStream
     fun size(rel: String): Long
     override fun close() {}
+
+    /** Empreinte de la version d'un fichier : elle change quand le fichier est remplacé. */
+    fun stamp(rel: String): String = size(rel).toString()
+
+    /** Ouvre [rel] à partir de l'octet [offset] : reprise d'une copie interrompue. */
+    fun open(rel: String, offset: Long): InputStream {
+        val input = open(rel)
+        try {
+            var left = offset
+            while (left > 0) {
+                val skipped = input.skip(left)
+                when {
+                    skipped > 0 -> left -= skipped
+                    input.read() >= 0 -> left--
+                    // Plus court que la partie déjà copiée : le fichier a changé sur le serveur.
+                    else -> throw UiException(R.string.err_copy_changed, rel)
+                }
+            }
+        } catch (e: Throwable) {
+            runCatching { input.close() }
+            throw e
+        }
+        return input
+    }
 }
 
 class LocalFs(private val root: String) : SourceFs {

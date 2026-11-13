@@ -4,11 +4,16 @@ import fr.retrosalon.R
 import fr.retrosalon.UiException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
+
+/** Suffixe d'un fichier en cours de copie. */
+private const val PART = ".part"
 
 /** Fichier prêt à être lancé, et le dossier de sa console (utile pour les URI SAF et MAME). */
 data class Prepared(val file: File, val systemDir: File)
@@ -109,9 +114,20 @@ internal fun cachedFiles(systemDir: File, rel: String, size: Long?, lenient: Boo
 class GameCache(
     private val cacheRoot: () -> String,
     private val cacheLimitGb: () -> Int,
+    /** Attente avant un nouvel essai, après une coupure ou un serveur trop lent. */
+    private val retryDelayMs: Long = RETRY_DELAY_MS,
     private val openSmb: (Source.Smb) -> SourceFs = ::SmbFs,
 ) {
     constructor(store: Store) : this({ store.cacheRoot }, { store.cacheLimitGb })
+
+    companion object {
+        /** Essais en tout pour copier un jeu, quand le serveur ne répond plus ou que la connexion tombe. */
+        const val ATTEMPTS = 3
+        private const val RETRY_DELAY_MS = 2_000L
+
+        /** Serveur injoignable ou introuvable (réseau pas encore revenu), par opposition à un refus du serveur. */
+        private val UNREACHABLE = setOf(R.string.err_server_unreachable, R.string.err_server_not_found)
+    }
 
     fun systemDirFor(source: Source, game: Game): File = when (source) {
         is Source.Local -> File(source.path, game.folder)
@@ -122,12 +138,14 @@ class GameCache(
      * Fichier à lancer : le jeu local là où il est, ou le jeu du serveur pris dans le cache,
      * après copie si besoin. Lit le disque et le réseau : à appeler hors du fil principal.
      * @param onConnect appelé juste avant de contacter le serveur, donc quand une copie peut être nécessaire.
+     * @param onRetry appelé avant chaque nouvel essai : numéro de l'essai, nombre d'essais en tout.
      * @param onProgress octets copiés, octets à copier.
      */
     suspend fun prepare(
         source: Source,
         game: Game,
         onConnect: suspend () -> Unit = {},
+        onRetry: suspend (attempt: Int, attempts: Int) -> Unit = { _, _ -> },
         onProgress: (Long, Long) -> Unit,
     ): Prepared {
         val systemDir = systemDirFor(source, game)
@@ -144,29 +162,82 @@ class GameCache(
         currentCoroutineContext().ensureActive()
         return try {
             onConnect()
-            cacheLock.withLock {
-                val fs = try {
-                    openSmb(source)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // Serveur éteint ou injoignable : on joue la version entière du cache, même si le jeu a
-                    // changé sur le serveur depuis (taille différente du dernier scan). Une copie ne met ses
-                    // fichiers en place que tous ensemble : cette version est cohérente.
-                    val files = runCatching { cachedFiles(systemDir, game.rel, size = null, lenient = true) }.getOrNull() ?: throw e
-                    return@withLock fromCache(files, systemDir)
-                }
-                fs.use { copyFromServer(it, game, systemDir, onProgress) }
-            }
+            cacheLock.withLock { copyWithRetries(source, game, systemDir, onRetry, onProgress) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             // Copie interrompue (coupure, disque plein…) : le jeu se lance quand même s'il est entier dans
             // le cache dans la version du dernier scan (sauf fichiers facultatifs absents). Sinon, l'erreur
             // est la bonne explication pour l'utilisateur.
-            val files = runCatching { cachedFiles(systemDir, game.rel, game.size, lenient = true) }.getOrNull() ?: throw e
+            val files = runCatching { cachedFiles(systemDir, game.rel, game.size, lenient = true) }.getOrNull()
+                ?: throw SmbFs.explain(e, source.label)
             fromCache(files, systemDir)
         }
+    }
+
+    /**
+     * Copie le jeu depuis le serveur. Si le serveur ne répond plus à temps (disque en veille, Wi-Fi
+     * faible) ou si la connexion tombe, on se reconnecte et la copie reprend là où elle en était,
+     * jusqu'à [ATTEMPTS] essais en tout. Les autres erreurs (fichier absent, disque de la TV plein…)
+     * arrêtent tout de suite : réessayer n'y changerait rien.
+     */
+    private suspend fun copyWithRetries(
+        source: Source.Smb,
+        game: Game,
+        systemDir: File,
+        onRetry: suspend (Int, Int) -> Unit,
+        onProgress: (Long, Long) -> Unit,
+    ): Prepared {
+        var attempt = 1
+        // Empreinte (taille, date) de chaque fichier au moment où sa copie a commencé, dans ce lancement :
+        // une partie copiée ne reprend que si le fichier n'a pas changé sur le serveur depuis.
+        val stamps = mutableMapOf<String, String>()
+        // Reste d'une copie d'un lancement précédent (appli arrêtée en pleine copie) : jamais repris,
+        // le fichier a pu changer sur le serveur depuis.
+        deleteParts(systemDir)
+        try {
+            while (true) {
+                val fs = try {
+                    openSmb(source)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Après une coupure, le serveur peut rester injoignable quelques secondes (Wi-Fi de la TV
+                    // qui se reconnecte) : on réessaie. Pas un refus du serveur (mot de passe, partage) :
+                    // des échecs de connexion répétés peuvent bloquer le compte sur un PC Windows.
+                    val stillOffline = attempt > 1 && e is UiException && e.res in UNREACHABLE
+                    if (attempt < ATTEMPTS && (SmbFs.isNetworkGlitch(e) || stillOffline)) {
+                        attempt++
+                        onRetry(attempt, ATTEMPTS)
+                        delay(retryDelayMs * (attempt - 1))
+                        continue
+                    }
+                    // Serveur éteint ou injoignable : on joue la version entière du cache, même si le jeu a
+                    // changé sur le serveur depuis (taille différente du dernier scan). Une copie ne met ses
+                    // fichiers en place que tous ensemble : cette version est cohérente.
+                    val files = runCatching { cachedFiles(systemDir, game.rel, size = null, lenient = true) }.getOrNull() ?: throw e
+                    return fromCache(files, systemDir)
+                }
+                try {
+                    return fs.use { copyFromServer(it, game, systemDir, onProgress, stamps) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (attempt >= ATTEMPTS || !SmbFs.isNetworkGlitch(e)) throw e
+                }
+                attempt++
+                onRetry(attempt, ATTEMPTS)
+                delay(retryDelayMs * (attempt - 1))
+            }
+        } finally {
+            // Les parties déjà copiées ne servent qu'aux essais de ce lancement.
+            deleteParts(systemDir)
+        }
+    }
+
+    /** Efface les fichiers en cours de copie d'une console (sous le verrou du cache : aucune autre copie en cours). */
+    private fun deleteParts(systemDir: File) {
+        systemDir.walkTopDown().filter { it.isFile && it.name.endsWith(PART) }.forEach { it.delete() }
     }
 
     /** Marque les fichiers comme récemment joués, pour que le cache les garde le plus longtemps. */
@@ -184,9 +255,12 @@ class GameCache(
      * (« .new »), et tous ne prennent leur vrai nom qu'à la fin, ensemble. Une copie interrompue
      * (annulation, coupure) ne touche donc pas au jeu déjà dans le cache : jamais un mélange de deux
      * versions. Les fichiers provisoires complets servent à reprendre la copie la fois suivante.
+     * [stamps] : empreintes des fichiers dont la copie a commencé à un essai précédent du même lancement ;
+     * un fichier à moitié copié reprend où il s'était arrêté s'il n'a pas changé sur le serveur.
      */
     private suspend fun copyFromServer(
         fs: SourceFs, game: Game, systemDir: File, onProgress: (Long, Long) -> Unit,
+        stamps: MutableMap<String, String> = mutableMapOf(),
     ): Prepared {
         val main = Scanner.join(game.folder, game.rel)
         val dest = childInside(systemDir, game.rel)
@@ -206,7 +280,7 @@ class GameCache(
             val size = if (rel == main) mainSize else sizeIfPresent(fs, rel) ?: continue
             val read = if (file.isFile && file.length() == size) file else {
                 val next = provisional(file)
-                copy(fs, rel, next, size, 0, 0) { _, _ -> }
+                copy(fs, rel, next, size, 0, 0, stamps) { _, _ -> }
                 newDescriptors += next to file
                 next
             }
@@ -240,7 +314,7 @@ class GameCache(
                 continue
             }
             val next = provisional(file)
-            done = copy(fs, rel, next, size, done, total, onProgress)
+            done = copy(fs, rel, next, size, done, total, stamps, onProgress)
             newFiles += next to file
         }
 
@@ -272,23 +346,31 @@ class GameCache(
             null
         }
 
-    /** Copie un fichier s'il manque ou si sa taille diffère. Renvoie le cumul d'octets traités. */
+    /**
+     * Copie un fichier s'il manque ou si sa taille diffère. Renvoie le cumul d'octets traités.
+     * Reprend la partie déjà copiée par un essai précédent du même lancement si le fichier n'a pas changé
+     * sur le serveur depuis ([stamps]) : sinon, on collerait le début d'une version à la fin d'une autre.
+     */
     private suspend fun copy(
         fs: SourceFs, rel: String, dest: File, size: Long, doneBefore: Long, total: Long,
-        onProgress: (Long, Long) -> Unit,
+        stamps: MutableMap<String, String>, onProgress: (Long, Long) -> Unit,
     ): Long {
         if (dest.exists() && dest.length() == size) {
             onProgress(doneBefore + size, total)
             return doneBefore + size
         }
         dest.parentFile?.mkdirs()
-        val part = File(dest.path + ".part")
+        val part = File(dest.path + PART)
+        val stamp = fs.stamp(rel)
+        val start = if (stamps[part.path] == stamp && part.isFile && part.length() in 1..size) part.length() else 0L
+        stamps[part.path] = stamp
         try {
-            fs.open(rel).use { input ->
-                part.outputStream().use { out ->
+            fs.open(rel, start).use { input ->
+                FileOutputStream(part, start > 0).use { out ->
                     val buf = ByteArray(1 shl 20)
-                    var copied = 0L
-                    var lastReport = 0L
+                    var copied = start
+                    var lastReport = start
+                    if (start > 0) onProgress(doneBefore + start, total)
                     while (true) {
                         currentCoroutineContext().ensureActive()
                         val n = input.read(buf)
@@ -312,7 +394,9 @@ class GameCache(
             if (dest.exists()) dest.delete()
             if (!part.renameTo(dest)) throw UiException(R.string.err_cannot_write, dest.path)
         } catch (e: Throwable) {
-            part.delete()
+            // Coupure ou serveur trop lent : la partie copiée sert au prochain essai (copyWithRetries l'efface
+            // à la fin). Sinon (annulation, fichier changé, disque plein…), elle ne doit pas rester.
+            if (!SmbFs.isNetworkGlitch(e)) part.delete()
             throw e
         }
         onProgress(doneBefore + size, total)
